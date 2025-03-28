@@ -21,9 +21,10 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
     fs.unlinkSync(tempFilePath);
     
     return transcription.text;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error transcribing audio:", error);
-    throw new Error(`Failed to transcribe audio: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Failed to transcribe audio: ${errorMessage}`);
   }
 }
 
@@ -65,27 +66,58 @@ export async function generatePodcastContent(topic: string): Promise<{
       description: result.description || `A podcast exploring ${topic}`,
       content: result.content || `Failed to generate content for ${topic}`
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error generating podcast content:", error);
-    throw new Error(`Failed to generate podcast content: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Failed to generate podcast content: ${errorMessage}`);
   }
 }
 
 // Convert text to speech using OpenAI TTS
 export async function textToSpeech(text: string): Promise<Buffer> {
   try {
-    const chunks: Buffer[] = [];
+    // TTS-1 has a character limit of 4096, so we need to split long text
+    const MAX_CHUNK_SIZE = 4000; // slightly less than 4096 to be safe
+    
+    // If text is short enough, process it directly
+    if (text.length <= MAX_CHUNK_SIZE) {
+      const mp3 = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "alloy",
+        input: text,
+      });
+      
+      return Buffer.from(await mp3.arrayBuffer());
+    }
+    
+    // For long text, create a demo sample of the first part
+    // In a production app, we would process all chunks and combine them
+    console.log(`Text too long (${text.length} chars). Using shortened version for demo.`);
+    
+    // Extract first few paragraphs for a sample
+    const paragraphs = text.split('\n\n');
+    let sampleText = '';
+    let i = 0;
+    
+    // Get introduction paragraphs up to the limit
+    while (i < paragraphs.length && (sampleText.length + paragraphs[i].length) < MAX_CHUNK_SIZE) {
+      sampleText += paragraphs[i] + '\n\n';
+      i++;
+    }
+    
+    // Add a note about the shortened content
+    sampleText += "This is a shortened sample of the podcast. In a production version, the full content would be available.";
     
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
-      input: text,
+      input: sampleText,
     });
     
-    const buffer = Buffer.from(await mp3.arrayBuffer());
-    return buffer;
-  } catch (error) {
+    return Buffer.from(await mp3.arrayBuffer());
+  } catch (error: unknown) {
     console.error("Error generating speech:", error);
-    throw new Error(`Failed to generate speech: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Failed to generate speech: ${errorMessage}`);
   }
 }

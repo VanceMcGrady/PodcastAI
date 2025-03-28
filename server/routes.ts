@@ -75,56 +75,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Topic is required" });
       }
 
-      // Update client on progress
+      // Setup response headers for streaming
       res.writeHead(200, {
         'Content-Type': 'application/json',
-        'Transfer-Encoding': 'chunked'
+        'Transfer-Encoding': 'chunked',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
       });
 
-      // Step 1: Generate content
-      res.write(JSON.stringify({ status: "generating", progress: 25, step: "Generating content..." }) + "\n");
-      const content = await generatePodcastContent(topic);
-
-      // Step 2: Convert to speech
-      res.write(JSON.stringify({ status: "generating", progress: 50, step: "Converting to speech..." }) + "\n");
-      const audioBuffer = await textToSpeech(content.content);
-
-      // Step 3: Save audio file
-      res.write(JSON.stringify({ status: "generating", progress: 75, step: "Finalizing podcast..." }) + "\n");
-      const fileName = `podcast-${Date.now()}.mp3`;
-      const filePath = path.join(audioDir, fileName);
-      fs.writeFileSync(filePath, audioBuffer);
-
-      // Calculate approximate duration (1 word ≈ 0.5 seconds)
-      const wordCount = content.content.split(' ').length;
-      const approximateDuration = Math.round(wordCount * 0.5);
-
-      // Step 4: Create podcast entry
-      const podcastData = {
-        title: content.title,
-        description: content.description,
-        content: content.content,
-        audioUrl: `/audio/${fileName}`,
-        duration: approximateDuration
+      // Helper function to send progress updates
+      const sendProgress = (progress: number, step: string) => {
+        try {
+          const update = JSON.stringify({ 
+            status: "generating", 
+            progress, 
+            step 
+          }) + "\n";
+          res.write(update);
+        } catch (err) {
+          console.error("Failed to write progress update:", err);
+        }
       };
 
-      const validatedData = insertPodcastSchema.parse(podcastData);
-      const podcast = await storage.createPodcast(validatedData);
-
-      // Step 5: Return final podcast
-      res.write(JSON.stringify({ 
-        status: "completed", 
-        progress: 100, 
-        podcast 
-      }) + "\n");
-      res.end();
+      try {
+        // Step 1: Generate content
+        sendProgress(25, "Generating content...");
+        const content = await generatePodcastContent(topic);
+  
+        // Step 2: Convert to speech
+        sendProgress(50, "Converting to speech...");
+        const audioBuffer = await textToSpeech(content.content);
+  
+        // Step 3: Save audio file
+        sendProgress(75, "Finalizing podcast...");
+        const fileName = `podcast-${Date.now()}.mp3`;
+        const filePath = path.join(audioDir, fileName);
+        fs.writeFileSync(filePath, audioBuffer);
+  
+        // Calculate approximate duration (1 word ≈ 0.5 seconds)
+        const wordCount = content.content.split(' ').length;
+        const approximateDuration = Math.round(wordCount * 0.5);
+  
+        // Step 4: Create podcast entry
+        const podcastData = {
+          title: content.title,
+          description: content.description,
+          content: content.content,
+          audioUrl: `/audio/${fileName}`,
+          duration: approximateDuration
+        };
+  
+        const validatedData = insertPodcastSchema.parse(podcastData);
+        const podcast = await storage.createPodcast(validatedData);
+  
+        // Step 5: Return final podcast
+        const completion = JSON.stringify({ 
+          status: "completed", 
+          progress: 100, 
+          podcast 
+        }) + "\n";
+        res.write(completion);
+        res.end();
+      } catch (innerError) {
+        console.error("Inner error generating podcast:", innerError);
+        const errorMessage = innerError instanceof Error ? innerError.message : "Unknown error";
+        const errorResponse = JSON.stringify({ 
+          status: "error", 
+          message: `Failed to generate podcast: ${errorMessage}` 
+        }) + "\n";
+        res.write(errorResponse);
+        res.end();
+      }
     } catch (error) {
-      console.error("Error generating podcast:", error);
-      res.write(JSON.stringify({ 
-        status: "error", 
-        message: "Failed to generate podcast" 
-      }) + "\n");
-      res.end();
+      console.error("Outer error generating podcast:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      try {
+        res.write(JSON.stringify({ 
+          status: "error", 
+          message: `Failed to generate podcast: ${errorMessage}` 
+        }) + "\n");
+        res.end();
+      } catch (writeError) {
+        console.error("Failed to send error response:", writeError);
+        res.end();
+      }
     }
   });
 

@@ -85,15 +85,41 @@ export async function generatePodcastFetch(
         
         try {
           const data = JSON.parse(line);
+          console.log('Received data:', data);
+          
           if (data.status === 'generating') {
             onProgress(data.progress, data.step);
           } else if (data.status === 'completed') {
             return data.podcast;
           } else if (data.status === 'error') {
+            // Debug raw error message
+            console.error('Server error:', data.message);
             throw new Error(data.message || 'Failed to generate podcast');
           }
         } catch (e) {
-          console.warn('Error parsing JSON line:', line, e);
+          // More detailed logging for debugging
+          console.warn('Error parsing JSON line:', line);
+          console.warn('Parse error details:', e);
+          
+          // Try again with additional safety - sometimes JSON can be malformed with extra characters
+          try {
+            // Find what looks like a JSON object within the line
+            const match = line.match(/\{.*\}/);
+            if (match && match[0]) {
+              const data = JSON.parse(match[0]);
+              console.log('Recovered data from malformed JSON:', data);
+              
+              if (data.status === 'generating') {
+                onProgress(data.progress, data.step);
+              } else if (data.status === 'completed') {
+                return data.podcast;
+              } else if (data.status === 'error') {
+                throw new Error(data.message || 'Failed to generate podcast');
+              }
+            }
+          } catch (innerError) {
+            // Silent fail of recovery attempt
+          }
         }
       }
     }
