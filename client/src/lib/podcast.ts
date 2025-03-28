@@ -62,29 +62,53 @@ export async function generatePodcastFetch(
       throw new Error('Response body is not readable');
     }
 
-    let result = '';
+    let buffer = '';
     
     while (true) {
       const { done, value } = await reader.read();
       
       if (done) break;
       
-      // Convert the Uint8Array to a string
+      // Convert the Uint8Array to a string and add to buffer
       const chunk = new TextDecoder().decode(value);
-      result += chunk;
+      buffer += chunk;
       
+      // Process each complete line (newline separated JSON objects)
+      const lines = buffer.split('\n');
+      
+      // Keep the last potentially incomplete line in the buffer
+      buffer = lines.pop() || '';
+      
+      // Process each complete JSON line
+      for (const line of lines) {
+        if (line.trim() === '') continue; // Skip empty lines
+        
+        try {
+          const data = JSON.parse(line);
+          if (data.status === 'generating') {
+            onProgress(data.progress, data.step);
+          } else if (data.status === 'completed') {
+            return data.podcast;
+          } else if (data.status === 'error') {
+            throw new Error(data.message || 'Failed to generate podcast');
+          }
+        } catch (e) {
+          console.warn('Error parsing JSON line:', line, e);
+        }
+      }
+    }
+    
+    // Process any remaining data in the buffer after the stream is done
+    if (buffer.trim() !== '') {
       try {
-        const data = JSON.parse(chunk);
-        if (data.status === 'generating') {
-          onProgress(data.progress, data.step);
-        } else if (data.status === 'completed') {
+        const data = JSON.parse(buffer);
+        if (data.status === 'completed') {
           return data.podcast;
         } else if (data.status === 'error') {
           throw new Error(data.message || 'Failed to generate podcast');
         }
       } catch (e) {
-        // If we can't parse the JSON, it could be a partial chunk,
-        // we'll try to process on the next iteration
+        console.warn('Error parsing final buffer:', buffer, e);
       }
     }
     

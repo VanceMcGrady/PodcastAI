@@ -82,15 +82,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Step 1: Generate content
-      res.write(JSON.stringify({ status: "generating", progress: 25, step: "Generating content..." }));
+      res.write(JSON.stringify({ status: "generating", progress: 25, step: "Generating content..." }) + "\n");
       const content = await generatePodcastContent(topic);
 
       // Step 2: Convert to speech
-      res.write(JSON.stringify({ status: "generating", progress: 50, step: "Converting to speech..." }));
+      res.write(JSON.stringify({ status: "generating", progress: 50, step: "Converting to speech..." }) + "\n");
       const audioBuffer = await textToSpeech(content.content);
 
       // Step 3: Save audio file
-      res.write(JSON.stringify({ status: "generating", progress: 75, step: "Finalizing podcast..." }));
+      res.write(JSON.stringify({ status: "generating", progress: 75, step: "Finalizing podcast..." }) + "\n");
       const fileName = `podcast-${Date.now()}.mp3`;
       const filePath = path.join(audioDir, fileName);
       fs.writeFileSync(filePath, audioBuffer);
@@ -116,14 +116,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "completed", 
         progress: 100, 
         podcast 
-      }));
+      }) + "\n");
       res.end();
     } catch (error) {
       console.error("Error generating podcast:", error);
       res.write(JSON.stringify({ 
         status: "error", 
         message: "Failed to generate podcast" 
-      }));
+      }) + "\n");
       res.end();
     }
   });
