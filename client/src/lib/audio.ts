@@ -10,6 +10,9 @@ export class AudioRecorder {
   private volumeDataArray: Uint8Array | null = null;
   private volumeCallback: ((data: Uint8Array) => void) | null = null;
   private analyzeInterval: number | null = null;
+  private maxRecordingDuration: number = 60; // Maximum recording time in seconds
+  private recordingTimer: number | null = null;
+  private timeRemainingCallback: ((secondsRemaining: number) => void) | null = null;
 
   // Check if browser supports audio recording
   public static isSupported(): boolean {
@@ -74,7 +77,17 @@ export class AudioRecorder {
     }
   }
 
-  // Start recording
+  // Set maximum recording duration (in seconds)
+  public setMaxRecordingDuration(seconds: number): void {
+    this.maxRecordingDuration = Math.max(10, seconds); // Minimum 10 seconds
+  }
+  
+  // Register callback for time remaining updates
+  public onTimeRemainingUpdate(callback: (secondsRemaining: number) => void): void {
+    this.timeRemainingCallback = callback;
+  }
+  
+  // Start recording with auto-stop timer
   public start(): void {
     if (!this.mediaRecorder) {
       throw new Error("Audio recorder not initialized");
@@ -85,15 +98,68 @@ export class AudioRecorder {
     
     // Start analyzing audio volume if callback is set
     this.startVolumeAnalysis();
+    
+    // Clear any existing timer
+    if (this.recordingTimer !== null) {
+      clearInterval(this.recordingTimer);
+      this.recordingTimer = null;
+    }
+    
+    // Set up countdown timer
+    let secondsRemaining = this.maxRecordingDuration;
+    
+    // Initial callback to update UI immediately
+    if (this.timeRemainingCallback) {
+      this.timeRemainingCallback(secondsRemaining);
+    }
+    
+    // Start timer that counts down and eventually stops recording
+    this.recordingTimer = window.setInterval(() => {
+      secondsRemaining -= 1;
+      
+      // Update UI with time remaining
+      if (this.timeRemainingCallback) {
+        this.timeRemainingCallback(secondsRemaining);
+      }
+      
+      // Auto-stop when time runs out
+      if (secondsRemaining <= 0) {
+        clearInterval(this.recordingTimer as number);
+        this.recordingTimer = null;
+        
+        // Only auto-stop if we're still recording
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+          console.log('Auto-stopping recording after reaching maximum duration');
+          this.mediaRecorder.stop();
+        }
+      }
+    }, 1000); // Update every second
   }
 
   // Stop recording and return audio blob
   public stop(): Promise<Blob> {
     this.stopVolumeAnalysis();
     
+    // Clear the recording timer if it exists
+    if (this.recordingTimer !== null) {
+      clearInterval(this.recordingTimer);
+      this.recordingTimer = null;
+    }
+    
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         reject(new Error("Audio recorder not initialized"));
+        return;
+      }
+      
+      // If it's not in recording state, don't try to stop it
+      if (this.mediaRecorder.state !== 'recording') {
+        if (this.audioChunks.length > 0) {
+          const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+          resolve(audioBlob);
+        } else {
+          reject(new Error("No audio recorded"));
+        }
         return;
       }
 
@@ -185,6 +251,12 @@ export class AudioRecorder {
   public cleanup(): void {
     this.stopVolumeAnalysis();
     
+    // Clear any recording timers
+    if (this.recordingTimer !== null) {
+      clearInterval(this.recordingTimer);
+      this.recordingTimer = null;
+    }
+    
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
@@ -200,6 +272,7 @@ export class AudioRecorder {
     this.mediaRecorder = null;
     this.volumeDataArray = null;
     this.volumeCallback = null;
+    this.timeRemainingCallback = null;
   }
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent, useRef } from "react";
 import { MicButton } from "@/components/ui/mic-button";
 import { Waveform } from "@/components/ui/waveform";
-import { AudioRecorder } from "@/lib/audio";
+import { AudioRecorder, formatTime } from "@/lib/audio";
 import { transcribeAudio } from "@/lib/podcast";
 
 interface RecorderProps {
@@ -13,11 +13,13 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recorder, setRecorder] = useState<AudioRecorder | null>(null);
   const [recordingStatus, setRecordingStatus] = useState("Tap to start recording");
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [volumeData, setVolumeData] = useState<Uint8Array | undefined>(undefined);
   const [microphoneAvailable, setMicrophoneAvailable] = useState<boolean | null>(null);
   const volumeSensitivity = useRef(2.0); // Higher sensitivity multiplier for more visible movement
+  const maxRecordingTime = 120; // 2 minutes maximum recording time
 
   useEffect(() => {
     // First check if recording is supported in this browser
@@ -75,12 +77,27 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
     };
   }, [onError]);
 
+  useEffect(() => {
+    if (recorder) {
+      // Set maximum recording duration
+      recorder.setMaxRecordingDuration(maxRecordingTime);
+      
+      // Register callback for time updates
+      recorder.onTimeRemainingUpdate((seconds) => {
+        setTimeRemaining(seconds);
+      });
+    }
+  }, [recorder, maxRecordingTime]);
+
   const toggleRecording = async () => {
     if (!recorder) return;
 
     if (isRecording) {
       try {
         setRecordingStatus("Processing your recording...");
+        // Reset timer display
+        setTimeRemaining(null);
+        
         const audioBlob = await recorder.stop();
         setIsRecording(false);
         setVolumeData(undefined); // Clear volume data when not recording
@@ -97,13 +114,15 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
         onError(error instanceof Error ? error : new Error("Failed to process recording"));
         setIsRecording(false);
         setVolumeData(undefined);
+        setTimeRemaining(null);
         setRecordingStatus("Tap to start recording");
       }
     } else {
       try {
+        // Configure and start the recorder
         recorder.start();
         setIsRecording(true);
-        setRecordingStatus("Recording... Tap to stop");
+        setRecordingStatus("Recording... Tap when finished");
       } catch (error) {
         onError(error instanceof Error ? error : new Error("Failed to start recording"));
       }
@@ -116,6 +135,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
     recorder.stop();
     setIsRecording(false);
     setVolumeData(undefined); // Clear volume data
+    setTimeRemaining(null); // Reset timer display
     setRecordingStatus("Tap to start recording");
   };
 
@@ -150,9 +170,20 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
               className="mb-6"
             />
             
-            <p className="text-gray-500 text-center mb-4 h-6">
-              {recordingStatus}
-            </p>
+            <div className="flex flex-col items-center">
+              <p className="text-gray-500 text-center mb-2 h-6">
+                {recordingStatus}
+              </p>
+              
+              {/* Timer display */}
+              {isRecording && timeRemaining !== null && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-primary">
+                    Time remaining: {formatTime(timeRemaining)}
+                  </p>
+                </div>
+              )}
+            </div>
             
             <Waveform 
               isActive={isRecording} 
