@@ -4,10 +4,22 @@ export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
+  private audioContext: AudioContext | null = null;
+  private analyser: AnalyserNode | null = null;
+  private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
+  private volumeDataArray: Uint8Array | null = null;
+  private volumeCallback: ((data: Uint8Array) => void) | null = null;
+  private analyzeInterval: number | null = null;
 
   // Check if browser supports audio recording
   public static isSupported(): boolean {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    return !!(
+      typeof navigator !== 'undefined' && 
+      navigator.mediaDevices && 
+      navigator.mediaDevices.getUserMedia && 
+      typeof window !== 'undefined' && 
+      typeof window.AudioContext === 'function'
+    );
   }
 
   // Request microphone permission and initialize recorder
@@ -22,10 +34,34 @@ export class AudioRecorder {
         }
       };
       
+      // Set up audio analysis
+      this.setupAudioAnalysis();
+      
       return Promise.resolve();
     } catch (error) {
       console.error("Error initializing audio recorder:", error);
       return Promise.reject(error);
+    }
+  }
+
+  // Set up audio context and analyzer for volume visualization
+  private setupAudioAnalysis(): void {
+    if (!this.stream) return;
+    
+    try {
+      this.audioContext = new AudioContext();
+      this.analyser = this.audioContext.createAnalyser();
+      this.mediaStreamSource = this.audioContext.createMediaStreamSource(this.stream);
+      
+      // Connect the media stream to the analyzer
+      this.mediaStreamSource.connect(this.analyser);
+      
+      // Configure the analyzer
+      this.analyser.fftSize = 256; // Smaller values for better performance
+      const bufferLength = this.analyser.frequencyBinCount;
+      this.volumeDataArray = new Uint8Array(bufferLength);
+    } catch (error) {
+      console.error("Error setting up audio analysis:", error);
     }
   }
 
@@ -37,10 +73,15 @@ export class AudioRecorder {
     
     this.audioChunks = [];
     this.mediaRecorder.start();
+    
+    // Start analyzing audio volume if callback is set
+    this.startVolumeAnalysis();
   }
 
   // Stop recording and return audio blob
   public stop(): Promise<Blob> {
+    this.stopVolumeAnalysis();
+    
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         reject(new Error("Audio recorder not initialized"));
@@ -54,6 +95,49 @@ export class AudioRecorder {
 
       this.mediaRecorder.stop();
     });
+  }
+
+  // Register a callback to receive volume data
+  public onVolumeChange(callback: (data: Uint8Array) => void): void {
+    this.volumeCallback = callback;
+  }
+
+  // Start analyzing audio volume
+  private startVolumeAnalysis(): void {
+    if (!this.analyser || !this.volumeDataArray || !this.volumeCallback) return;
+    
+    // Clear any existing interval
+    this.stopVolumeAnalysis();
+    
+    // Start a new interval to analyze volume
+    this.analyzeInterval = window.setInterval(() => {
+      if (this.analyser && this.volumeDataArray && this.volumeCallback) {
+        // Get current volume data
+        this.analyser.getByteFrequencyData(this.volumeDataArray);
+        
+        // Send to callback
+        this.volumeCallback(this.volumeDataArray);
+      }
+    }, 50); // Update approximately 20 times per second
+  }
+
+  // Stop analyzing audio volume
+  private stopVolumeAnalysis(): void {
+    if (this.analyzeInterval !== null) {
+      window.clearInterval(this.analyzeInterval);
+      this.analyzeInterval = null;
+    }
+  }
+
+  // Get average volume level (0-100)
+  public getAverageVolume(): number {
+    if (!this.volumeDataArray) return 0;
+    
+    const values = Array.from(this.volumeDataArray);
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    
+    // Scale to 0-100
+    return Math.min(100, Math.max(0, average));
   }
 
   // Convert blob to base64 for API submission
@@ -77,11 +161,23 @@ export class AudioRecorder {
 
   // Clean up resources
   public cleanup(): void {
+    this.stopVolumeAnalysis();
+    
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
     }
+    
+    if (this.audioContext) {
+      this.audioContext.close().catch(console.error);
+      this.audioContext = null;
+    }
+    
+    this.mediaStreamSource = null;
+    this.analyser = null;
     this.mediaRecorder = null;
+    this.volumeDataArray = null;
+    this.volumeCallback = null;
   }
 }
 

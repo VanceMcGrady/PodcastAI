@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useRef } from "react";
 import { MicButton } from "@/components/ui/mic-button";
 import { Waveform } from "@/components/ui/waveform";
 import { AudioRecorder } from "@/lib/audio";
@@ -15,6 +15,8 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   const [recordingStatus, setRecordingStatus] = useState("Tap to start recording");
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
+  const [volumeData, setVolumeData] = useState<Uint8Array | undefined>(undefined);
+  const volumeSensitivity = useRef(1.2); // Adjustable sensitivity for better visualization
 
   useEffect(() => {
     if (!AudioRecorder.isSupported()) {
@@ -26,6 +28,12 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
       try {
         const newRecorder = new AudioRecorder();
         await newRecorder.initialize();
+        
+        // Set up volume data callback
+        newRecorder.onVolumeChange((data) => {
+          setVolumeData(data);
+        });
+        
         setRecorder(newRecorder);
       } catch (error) {
         onError(error instanceof Error ? error : new Error("Failed to initialize audio recorder"));
@@ -49,6 +57,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
         setRecordingStatus("Processing your recording...");
         const audioBlob = await recorder.stop();
         setIsRecording(false);
+        setVolumeData(undefined); // Clear volume data when not recording
         
         // Convert to base64 for API transmission
         const audioBase64 = await recorder.blobToBase64(audioBlob);
@@ -61,6 +70,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
       } catch (error) {
         onError(error instanceof Error ? error : new Error("Failed to process recording"));
         setIsRecording(false);
+        setVolumeData(undefined);
         setRecordingStatus("Tap to start recording");
       }
     } else {
@@ -79,6 +89,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
     
     recorder.stop();
     setIsRecording(false);
+    setVolumeData(undefined); // Clear volume data
     setRecordingStatus("Tap to start recording");
   };
 
@@ -115,6 +126,8 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
             
             <Waveform 
               isActive={isRecording} 
+              volumeData={volumeData}
+              sensitivityMultiplier={volumeSensitivity.current}
               className="mb-4"
             />
             
