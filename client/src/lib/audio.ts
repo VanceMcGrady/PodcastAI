@@ -13,13 +13,14 @@ export class AudioRecorder {
 
   // Check if browser supports audio recording
   public static isSupported(): boolean {
-    return !!(
-      typeof navigator !== 'undefined' && 
-      navigator.mediaDevices && 
-      navigator.mediaDevices.getUserMedia && 
-      typeof window !== 'undefined' && 
-      typeof window.AudioContext === 'function'
-    );
+    if (typeof navigator === 'undefined') return false;
+    if (!navigator.mediaDevices) return false;
+    if (!navigator.mediaDevices.getUserMedia) return false;
+    if (typeof window === 'undefined') return false;
+    
+    // Check for AudioContext support
+    const hasAudioContext = !!(window.AudioContext || (window as any).webkitAudioContext);
+    return hasAudioContext;
   }
 
   // Request microphone permission and initialize recorder
@@ -49,17 +50,25 @@ export class AudioRecorder {
     if (!this.stream) return;
     
     try {
-      this.audioContext = new AudioContext();
+      // Use the appropriate AudioContext based on browser support
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      this.audioContext = new AudioContextClass();
       this.analyser = this.audioContext.createAnalyser();
       this.mediaStreamSource = this.audioContext.createMediaStreamSource(this.stream);
       
       // Connect the media stream to the analyzer
       this.mediaStreamSource.connect(this.analyser);
       
-      // Configure the analyzer
-      this.analyser.fftSize = 256; // Smaller values for better performance
+      // Configure the analyzer for better visualization
+      this.analyser.fftSize = 128; // Smaller value for better performance and more responsive visualization
+      this.analyser.smoothingTimeConstant = 0.5; // Default is 0.8, lower values = more responsive
+      this.analyser.minDecibels = -90; // Default is -100
+      this.analyser.maxDecibels = -10; // Default is -30, increase to amplify quieter sounds
+      
       const bufferLength = this.analyser.frequencyBinCount;
       this.volumeDataArray = new Uint8Array(bufferLength);
+      
+      console.log("Audio analysis setup complete - buffer length:", bufferLength);
     } catch (error) {
       console.error("Error setting up audio analysis:", error);
     }
@@ -104,28 +113,41 @@ export class AudioRecorder {
 
   // Start analyzing audio volume
   private startVolumeAnalysis(): void {
-    if (!this.analyser || !this.volumeDataArray || !this.volumeCallback) return;
+    if (!this.analyser || !this.volumeDataArray || !this.volumeCallback) {
+      console.log("Cannot start volume analysis - missing required components");
+      return;
+    }
     
     // Clear any existing interval
     this.stopVolumeAnalysis();
     
-    // Start a new interval to analyze volume
-    this.analyzeInterval = window.setInterval(() => {
+    console.log("Starting volume analysis with callback");
+    
+    // Start a new interval to analyze volume - use requestAnimationFrame for smoother updates
+    const updateVolume = () => {
       if (this.analyser && this.volumeDataArray && this.volumeCallback) {
         // Get current volume data
         this.analyser.getByteFrequencyData(this.volumeDataArray);
         
         // Send to callback
         this.volumeCallback(this.volumeDataArray);
+        
+        // Request next frame
+        this.analyzeInterval = window.requestAnimationFrame(updateVolume);
       }
-    }, 50); // Update approximately 20 times per second
+    };
+    
+    // Initial call to start the animation loop
+    this.analyzeInterval = window.requestAnimationFrame(updateVolume);
   }
 
   // Stop analyzing audio volume
   private stopVolumeAnalysis(): void {
     if (this.analyzeInterval !== null) {
-      window.clearInterval(this.analyzeInterval);
+      // Cancel animation frame rather than clearing interval
+      window.cancelAnimationFrame(this.analyzeInterval as number);
       this.analyzeInterval = null;
+      console.log("Volume analysis stopped");
     }
   }
 

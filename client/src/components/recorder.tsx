@@ -16,17 +16,35 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [volumeData, setVolumeData] = useState<Uint8Array | undefined>(undefined);
-  const volumeSensitivity = useRef(1.2); // Adjustable sensitivity for better visualization
+  const [microphoneAvailable, setMicrophoneAvailable] = useState<boolean | null>(null);
+  const volumeSensitivity = useRef(2.0); // Higher sensitivity multiplier for more visible movement
 
   useEffect(() => {
+    // First check if recording is supported in this browser
     if (!AudioRecorder.isSupported()) {
-      onError(new Error("Audio recording is not supported in this browser"));
+      console.log("Audio recording not supported in this browser");
+      setMicrophoneAvailable(false);
+      setShowTextInput(true); // Automatically switch to text input mode
       return;
     }
 
     const initRecorder = async () => {
       try {
         const newRecorder = new AudioRecorder();
+        
+        // Try to check microphone permissions first before full initialization
+        try {
+          // Just request basic permissions first
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          setMicrophoneAvailable(true);
+        } catch (permissionError) {
+          console.log("Microphone permission denied or device not available", permissionError);
+          setMicrophoneAvailable(false);
+          setShowTextInput(true); // Automatically switch to text input mode
+          return; // Don't proceed with initialization
+        }
+        
+        // Now proceed with full initialization
         await newRecorder.initialize();
         
         // Set up volume data callback
@@ -35,8 +53,16 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
         });
         
         setRecorder(newRecorder);
+        console.log("Audio recorder initialized successfully");
       } catch (error) {
-        onError(error instanceof Error ? error : new Error("Failed to initialize audio recorder"));
+        console.error("Failed to initialize audio recorder:", error);
+        setMicrophoneAvailable(false);
+        setShowTextInput(true); // Automatically switch to text input mode
+        
+        // Only show error to user if they were actively trying to use the microphone
+        if (!showTextInput) {
+          onError(error instanceof Error ? error : new Error("Failed to initialize audio recorder"));
+        }
       }
     };
 
@@ -101,6 +127,10 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   };
 
   const toggleInputMethod = () => {
+    // Only allow switching to microphone if it's available
+    if (!showTextInput && microphoneAvailable === false) {
+      return; // Don't allow switching to mic mode if microphone isn't available
+    }
     setShowTextInput(!showTextInput);
   };
 
@@ -153,6 +183,15 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
         ) : (
           // Text Input UI
           <>
+            {microphoneAvailable === false && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm max-w-md">
+                <p className="flex items-start">
+                  <span className="material-icons text-lg mr-2 mt-0.5">mic_off</span>
+                  <span>Microphone access is not available. Please check your browser permissions or use the text input option.</span>
+                </p>
+              </div>
+            )}
+          
             <form onSubmit={handleTextSubmit} className="w-full max-w-md">
               <div className="mb-4">
                 <textarea
@@ -164,17 +203,19 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 />
               </div>
               <div className="flex justify-between">
-                <button
-                  type="button"
-                  onClick={toggleInputMethod}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center"
-                >
-                  <span className="material-icons text-sm mr-1">mic</span>
-                  Record instead
-                </button>
+                {microphoneAvailable !== false && (
+                  <button
+                    type="button"
+                    onClick={toggleInputMethod}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center"
+                  >
+                    <span className="material-icons text-sm mr-1">mic</span>
+                    Record instead
+                  </button>
+                )}
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
+                  className={`px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200 ${microphoneAvailable === false ? 'ml-auto' : ''}`}
                 >
                   Generate Podcast
                 </button>

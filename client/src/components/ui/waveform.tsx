@@ -12,8 +12,15 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
   const barsRef = useRef<HTMLDivElement[]>([]);
   const animationRef = useRef<number | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
-  // Create bars for the waveform
+  // Debug visible state
+  useEffect(() => {
+    console.log("Waveform component - isActive:", isActive);
+    console.log("Waveform component - volumeData:", volumeData ? "present" : "not present");
+  }, [isActive, volumeData]);
+
+  // Create bars for the waveform - ensure we have a visible container
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -31,12 +38,19 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
     const resizeObserver = new ResizeObserver(updateContainerSize);
     resizeObserver.observe(container);
     
+    // Force a second update after a brief delay (helps with initial rendering)
+    const timer = setTimeout(() => {
+      updateContainerSize();
+      setForceUpdate(prev => prev + 1);
+    }, 100);
+    
     return () => {
       resizeObserver.disconnect();
+      clearTimeout(timer);
     };
   }, []);
   
-  // Create or update bars
+  // Create or update bars when container size changes or we force an update
   useEffect(() => {
     if (!containerRef.current || containerWidth <= 0) return;
     
@@ -47,10 +61,10 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
     barsRef.current = [];
     
     // Calculate number of bars based on container width
-    const barWidth = 4;
-    const barSpacing = 2;
+    const barWidth = 3;
+    const barSpacing = 3;
     const totalBarWidth = barWidth + barSpacing;
-    const numBars = Math.floor(containerWidth / totalBarWidth);
+    const numBars = Math.max(20, Math.floor(containerWidth / totalBarWidth));
     
     // Create new bars
     for (let i = 0; i < numBars; i++) {
@@ -61,12 +75,18 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
       container.appendChild(bar);
       barsRef.current.push(bar);
     }
-  }, [containerWidth]);
+    
+    // Initial state - small bars
+    barsRef.current.forEach(bar => {
+      bar.style.height = '5px';
+    });
+    
+  }, [containerWidth, forceUpdate]);
   
-  // Handle animation based on isActive state
+  // Handle animation based on isActive state - also show/hide container
   useEffect(() => {
+    // When inactive, reset bars and stop animation
     if (!isActive) {
-      // Reset bars when not active
       barsRef.current.forEach(bar => {
         bar.style.height = '5px';
       });
@@ -75,6 +95,16 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
+      }
+      
+      // If container exists, make it less visible
+      if (containerRef.current) {
+        containerRef.current.style.opacity = '0.5';
+      }
+    } else {
+      // If container exists, make it fully visible
+      if (containerRef.current) {
+        containerRef.current.style.opacity = '1';
       }
     }
     
@@ -107,9 +137,11 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
         // Get data point from volume data
         const dataIndex = index * stepSize;
         if (dataIndex < volumeData.length) {
-          // Scale the value (0-255) to a reasonable bar height
+          // Scale the value (0-255) to a reasonable bar height 
+          // Increase multiplier for more visible movement
           const value = volumeData[dataIndex];
-          const height = Math.max(5, value * 0.3 * sensitivityMultiplier); // Minimum 5px height
+          // Make bars taller for better visibility and apply sensitivity multiplier
+          const height = Math.max(5, Math.min(60, value * 0.5 * sensitivityMultiplier)); 
           bar.style.height = `${height}px`;
         }
       });
@@ -134,23 +166,25 @@ export function Waveform({ isActive, className, volumeData, sensitivityMultiplie
   return (
     <div 
       ref={containerRef} 
-      className={`waveform-container w-full ${className || ''} ${isActive ? '' : 'hidden'}`}
+      className={`waveform-container w-full ${className || ''}`}
     >
       <style>{`
         .waveform-container {
           height: 60px;
           position: relative;
           transition: opacity 0.3s ease-in-out;
+          opacity: 0.5;
+          min-height: 60px;
         }
         .waveform-bar {
           position: absolute;
           bottom: 0;
-          width: 4px;
+          width: 3px;
           height: 5px; /* Default height */
-          margin-right: 2px;
+          margin-right: 3px;
           border-radius: 2px;
           background-color: #6366F1;
-          transition: height 0.1s ease-out;
+          transition: height 0.05s ease-out;
         }
       `}</style>
     </div>

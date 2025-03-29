@@ -34,7 +34,7 @@ export function MicButton({
     >
       <span className="material-icons text-white">{isRecording ? "stop" : "mic"}</span>
       
-      <style jsx>{`
+      <style>{`
         .recording-pulse {
           box-shadow: 0 0 0 rgba(99, 102, 241, 0.4);
           animation: recording-pulse 2s infinite;
