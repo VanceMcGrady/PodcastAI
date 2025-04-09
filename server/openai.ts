@@ -28,7 +28,7 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   }
 }
 
-// Generate podcast content based on topic
+// Generate audiobook content based on topic
 export async function generatePodcastContent(topic: string): Promise<{
   title: string;
   description: string;
@@ -41,18 +41,20 @@ export async function generatePodcastContent(topic: string): Promise<{
         {
           role: "system",
           content: 
-            "You are an expert podcast creator. You create engaging, informative podcast scripts on various topics. " +
-            "Focus on creating content that's conversational, educational, and engaging - as if someone is explaining a topic to a friend. " +
-            "The podcast should be structured with a clear introduction, main content sections, and a conclusion. " +
-            "The length should be appropriate for about a 30-minute podcast (approximately 4500-5000 words)."
+            "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
+            "Focus on creating content that's eloquent, immersive, and educational with a warm narrative voice. " +
+            "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
+            "Avoid podcast-specific elements like host introductions, interjections, or references to 'listeners' or 'episodes'. " +
+            "The narrative should flow smoothly with proper transitions between sections. " +
+            "The length should be appropriate for about a 30-minute audiobook chapter (approximately 4500-5000 words)."
         },
         {
           role: "user",
-          content: `Create a podcast about "${topic}". Provide a JSON response with the following structure: 
+          content: `Create an audiobook chapter about "${topic}". Provide a JSON response with the following structure: 
           {
-            "title": "An engaging title for the podcast",
-            "description": "A brief 1-2 sentence description of what the podcast covers",
-            "content": "The full podcast script content"
+            "title": "An elegant title for the audiobook",
+            "description": "A brief 1-2 sentence description of what the audiobook chapter covers",
+            "content": "The full audiobook chapter content"
           }`
         }
       ],
@@ -83,7 +85,7 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     if (text.length <= MAX_CHUNK_SIZE) {
       const mp3 = await openai.audio.speech.create({
         model: "tts-1",
-        voice: "alloy",
+        voice: "nova", // Nova voice has a warm, professional narrative quality that's perfect for audiobooks
         input: text,
       });
       
@@ -115,11 +117,11 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     }
     
     // Add a note about the shortened content
-    sampleText += "\n\nThis is a shortened sample of the podcast. In a production version, the full content would be available.";
+    sampleText += "\n\nThis is a shortened sample of the audiobook. In a production version, the full content would be available.";
     
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
-      voice: "alloy",
+      voice: "nova", // Consistent voice for all audio generation
       input: sampleText,
     });
     

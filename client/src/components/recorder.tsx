@@ -167,49 +167,18 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex-1 flex flex-col">
-      <h2 className="text-lg font-semibold text-center mb-3">
+      <h2 className="text-lg font-semibold text-center mb-6">
         What would you like to learn about?
       </h2>
       
-      {microphoneAvailable !== false && (
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <button
-              type="button"
-              onClick={() => setShowTextInput(false)}
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg border flex items-center ${
-                !showTextInput 
-                  ? 'bg-primary text-white border-primary' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <span className="material-icons text-sm mr-1">mic</span>
-              Voice
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowTextInput(true)}
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg border flex items-center ${
-                showTextInput 
-                  ? 'bg-primary text-white border-primary' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <span className="material-icons text-sm mr-1">edit</span>
-              Text
-            </button>
-          </div>
-        </div>
-      )}
-      
       <div className="flex-1 flex flex-col items-center justify-center">
-        {!showTextInput ? (
-          // Voice Recording UI
-          <>
+        {/* Always show the Voice Recording UI first */}
+        {microphoneAvailable !== false && (
+          <div className="w-full mb-8 flex flex-col items-center">
             <MicButton 
               isRecording={isRecording} 
               onClick={toggleRecording} 
-              className="mb-6"
+              className="mb-4"
             />
             
             <div className="flex flex-col items-center">
@@ -235,7 +204,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
             />
             
             {isRecording && (
-              <div className="mt-6 space-x-4">
+              <div className="mt-4 space-x-4">
                 <button 
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-200"
                   onClick={cancelRecording}
@@ -244,48 +213,54 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 </button>
               </div>
             )}
-          </>
-        ) : (
-          // Text Input UI
-          <>
-            {microphoneAvailable === false && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm max-w-md">
-                <p className="flex items-start">
-                  <span className="material-icons text-lg mr-2 mt-0.5">mic_off</span>
-                  <span>Microphone access is not available. Please check your browser permissions or use the text input option.</span>
-                </p>
-              </div>
-            )}
-          
-            <form onSubmit={handleTextSubmit} className="w-full max-w-md">
-              <div className="mb-4">
-                <label htmlFor="podcast-topic" className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter your podcast topic:
-                </label>
-                <textarea
-                  id="podcast-topic"
-                  ref={textInputRef}
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Describe what you'd like your podcast to be about..."
-                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[120px] shadow-sm"
-                  required
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  For example: "The history of semiconductors" or "How to start a podcast"
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
-                >
-                  Generate Podcast
-                </button>
-              </div>
-            </form>
-          </>
+          </div>
         )}
+        
+        {/* Always show text input option below */}
+        <div className="w-full">
+          {microphoneAvailable === false && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm max-w-md mx-auto">
+              <p className="flex items-start">
+                <span className="material-icons text-lg mr-2 mt-0.5">mic_off</span>
+                <span>Microphone access is not available. Please use the text input option below.</span>
+              </p>
+            </div>
+          )}
+          
+          {/* Optional divider */}
+          {microphoneAvailable !== false && (
+            <div className="relative flex items-center my-6">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink mx-4 text-gray-400 text-sm">or type your topic</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+          )}
+          
+          <form onSubmit={handleTextSubmit} className="w-full max-w-md mx-auto">
+            <div className="mb-4">
+              <textarea
+                id="podcast-topic"
+                ref={textInputRef}
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Describe what you'd like your audiobook to be about..."
+                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[80px] shadow-sm"
+                required
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                For example: "The history of semiconductors" or "How to plan for retirement"
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
+              >
+                Generate Audiobook
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

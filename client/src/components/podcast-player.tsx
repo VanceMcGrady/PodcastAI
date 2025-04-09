@@ -17,7 +17,7 @@ export function PodcastPlayer({ podcast, onCreateNew }: PodcastPlayerProps) {
       <div className="flex-1 flex flex-col justify-center">
         <div className="flex justify-center mb-8">
           <div className="w-40 h-40 bg-gradient-to-br from-primary to-accent rounded-lg shadow-md flex items-center justify-center">
-            <span className="material-icons text-white text-5xl">podcasts</span>
+            <span className="material-icons text-white text-5xl">menu_book</span>
           </div>
         </div>
         
@@ -29,7 +29,7 @@ export function PodcastPlayer({ podcast, onCreateNew }: PodcastPlayerProps) {
           className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition duration-200"
           onClick={onCreateNew}
         >
-          Create new podcast
+          Create new audiobook
         </button>
       </div>
     </div>

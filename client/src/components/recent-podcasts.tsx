@@ -33,7 +33,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (isLoading) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Recent Podcasts</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="animate-pulse">
           {[1, 2].map((i) => (
             <div key={i} className="bg-gray-200 h-20 rounded-lg mb-3"></div>
@@ -46,7 +46,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (error) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Recent Podcasts</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="bg-red-50 p-4 rounded-lg text-red-500 text-center">
           {error.message}
         </div>
@@ -57,9 +57,9 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (podcasts.length === 0) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Recent Podcasts</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="bg-gray-50 p-4 rounded-lg text-gray-500 text-center">
-          You haven't created any podcasts yet.
+          You haven't created any audiobooks yet.
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-4">Your Recent Podcasts</h3>
+      <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
       
       {podcasts.map((podcast) => (
         <div 
@@ -76,7 +76,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
           onClick={() => onSelectPodcast(podcast)}
         >
           <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded flex items-center justify-center mr-4">
-            <span className="material-icons text-white text-sm">podcasts</span>
+            <span className="material-icons text-white text-sm">menu_book</span>
           </div>
           <div className="flex-1">
             <h4 className="font-medium text-gray-900 mb-1">{podcast.title}</h4>
