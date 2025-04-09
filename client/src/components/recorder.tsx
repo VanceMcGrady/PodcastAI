@@ -174,11 +174,11 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
       <div className="flex-1 flex flex-col items-center justify-center">
         {/* Always show the Voice Recording UI first */}
         {microphoneAvailable !== false && (
-          <div className="w-full mb-8 flex flex-col items-center">
+          <div className="w-full mb-4 flex flex-col items-center">
             <MicButton 
               isRecording={isRecording} 
               onClick={toggleRecording} 
-              className="mb-4"
+              className="mb-2"
             />
             
             <div className="flex flex-col items-center">
@@ -227,9 +227,9 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
             </div>
           )}
           
-          {/* Optional divider */}
+          {/* More compact divider */}
           {microphoneAvailable !== false && (
-            <div className="relative flex items-center my-6">
+            <div className="relative flex items-center my-3">
               <div className="flex-grow border-t border-gray-200"></div>
               <span className="flex-shrink mx-4 text-gray-400 text-sm">or type your topic</span>
               <div className="flex-grow border-t border-gray-200"></div>
@@ -243,7 +243,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 ref={textInputRef}
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Describe what you'd like your audiobook to be about..."
+                placeholder="Describe what you'd like to learn about..."
                 className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[80px] shadow-sm"
                 required
               />
@@ -256,7 +256,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 type="submit"
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
               >
-                Generate Audiobook
+                Create Learncast
               </button>
             </div>
           </form>
