@@ -90,23 +90,32 @@ export async function textToSpeech(text: string): Promise<Buffer> {
       return Buffer.from(await mp3.arrayBuffer());
     }
     
-    // For long text, create a demo sample of the first part
-    // In a production app, we would process all chunks and combine them
-    console.log(`Text too long (${text.length} chars). Using shortened version for demo.`);
+    // For long text, create a demo sample with introduction and first section
+    console.log(`Text too long (${text.length} chars). Generating audio for introduction section.`);
     
-    // Extract first few paragraphs for a sample
-    const paragraphs = text.split('\n\n');
-    let sampleText = '';
-    let i = 0;
+    // Strategy: Get the introduction section which typically contains the podcast format and overview
+    // First, split by major sections (usually indicated by multiple newlines or section markers)
+    const sections = text.split(/\n\s*---\s*\n|\n\*\*Section/i);
     
-    // Get introduction paragraphs up to the limit
-    while (i < paragraphs.length && (sampleText.length + paragraphs[i].length) < MAX_CHUNK_SIZE) {
-      sampleText += paragraphs[i] + '\n\n';
-      i++;
+    // Take the introduction (first section) and possibly a bit of the next section
+    let sampleText = sections[0];
+    
+    // If the intro is very short, add the first part of the next section if available
+    if (sampleText.length < 2000 && sections.length > 1) {
+      const remainingSpace = MAX_CHUNK_SIZE - sampleText.length - 100; // Leave some buffer
+      if (remainingSpace > 500 && sections[1].length > 0) {
+        // Add as much of the next section as will fit
+        sampleText += "\n\n---\n\n" + sections[1].substring(0, remainingSpace);
+      }
+    }
+    
+    // If still too long, trim to the max size
+    if (sampleText.length > MAX_CHUNK_SIZE) {
+      sampleText = sampleText.substring(0, MAX_CHUNK_SIZE - 100);
     }
     
     // Add a note about the shortened content
-    sampleText += "This is a shortened sample of the podcast. In a production version, the full content would be available.";
+    sampleText += "\n\nThis is a shortened sample of the podcast. In a production version, the full content would be available.";
     
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",

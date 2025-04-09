@@ -20,6 +20,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   const [microphoneAvailable, setMicrophoneAvailable] = useState<boolean | null>(null);
   const volumeSensitivity = useRef(2.0); // Higher sensitivity multiplier for more visible movement
   const maxRecordingTime = 120; // 2 minutes maximum recording time
+  const textInputRef = useRef<HTMLTextAreaElement>(null); // Reference for focusing the text input
 
   useEffect(() => {
     // First check if recording is supported in this browser
@@ -152,13 +153,54 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
       return; // Don't allow switching to mic mode if microphone isn't available
     }
     setShowTextInput(!showTextInput);
+    
+    // Focus the text input when switching to text mode
+    if (!showTextInput) {
+      // Use setTimeout to ensure the component is rendered before focusing
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+        }
+      }, 0);
+    }
   };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex-1 flex flex-col">
-      <h2 className="text-lg font-semibold text-center mb-6">
+      <h2 className="text-lg font-semibold text-center mb-3">
         What would you like to learn about?
       </h2>
+      
+      {microphoneAvailable !== false && (
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex rounded-md shadow-sm" role="group">
+            <button
+              type="button"
+              onClick={() => setShowTextInput(false)}
+              className={`px-4 py-2 text-sm font-medium rounded-l-lg border flex items-center ${
+                !showTextInput 
+                  ? 'bg-primary text-white border-primary' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <span className="material-icons text-sm mr-1">mic</span>
+              Voice
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowTextInput(true)}
+              className={`px-4 py-2 text-sm font-medium rounded-r-lg border flex items-center ${
+                showTextInput 
+                  ? 'bg-primary text-white border-primary' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <span className="material-icons text-sm mr-1">edit</span>
+              Text
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="flex-1 flex flex-col items-center justify-center">
         {!showTextInput ? (
@@ -192,7 +234,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
               className="mb-4"
             />
             
-            {isRecording ? (
+            {isRecording && (
               <div className="mt-6 space-x-4">
                 <button 
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-200"
@@ -201,14 +243,6 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                   Cancel
                 </button>
               </div>
-            ) : (
-              <button 
-                onClick={toggleInputMethod}
-                className="mt-4 text-primary hover:text-secondary text-sm flex items-center"
-              >
-                <span className="material-icons text-sm mr-1">edit</span>
-                Type instead
-              </button>
             )}
           </>
         ) : (
@@ -225,28 +259,26 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
           
             <form onSubmit={handleTextSubmit} className="w-full max-w-md">
               <div className="mb-4">
+                <label htmlFor="podcast-topic" className="block text-sm font-medium text-gray-700 mb-1">
+                  Enter your podcast topic:
+                </label>
                 <textarea
+                  id="podcast-topic"
+                  ref={textInputRef}
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder="Describe what you'd like your podcast to be about..."
-                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[120px]"
+                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[120px] shadow-sm"
                   required
                 />
+                <p className="mt-2 text-xs text-gray-500">
+                  For example: "The history of semiconductors" or "How to start a podcast"
+                </p>
               </div>
-              <div className="flex justify-between">
-                {microphoneAvailable !== false && (
-                  <button
-                    type="button"
-                    onClick={toggleInputMethod}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center"
-                  >
-                    <span className="material-icons text-sm mr-1">mic</span>
-                    Record instead
-                  </button>
-                )}
+              <div className="flex justify-end">
                 <button
                   type="submit"
-                  className={`px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200 ${microphoneAvailable === false ? 'ml-auto' : ''}`}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
                 >
                   Generate Podcast
                 </button>
