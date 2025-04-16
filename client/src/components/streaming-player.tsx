@@ -12,22 +12,32 @@ export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause, onEnded }: S
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Create a ref for the update progress function to ensure it stays the same
+  // between renders, so we can properly remove the event listener later
+  const updateProgressRef = useRef<(() => void) | null>(null);
+  
   useEffect(() => {
     // Create audio element if it doesn't exist
     if (!audioRef.current) {
       audioRef.current = new Audio(audioUrl);
       
-      // Set up progress update
-      audioRef.current.addEventListener('timeupdate', () => {
+      // Set up progress update function
+      updateProgressRef.current = () => {
         if (audioRef.current) {
           const currentTime = audioRef.current.currentTime;
           const duration = audioRef.current.duration || 1;
           setProgress((currentTime / duration) * 100);
         }
-      });
+      };
+      
+      // Add event listeners
+      if (updateProgressRef.current) {
+        audioRef.current.addEventListener('timeupdate', updateProgressRef.current);
+      }
       
       // Set up ended event
       if (onEnded) {
+        console.log("Setting up onEnded event listener");
         audioRef.current.addEventListener('ended', onEnded);
       }
     }
@@ -36,7 +46,9 @@ export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause, onEnded }: S
       // Clean up when component unmounts
       if (audioRef.current) {
         // Remove all event listeners
-        audioRef.current.removeEventListener('timeupdate', () => {});
+        if (updateProgressRef.current) {
+          audioRef.current.removeEventListener('timeupdate', updateProgressRef.current);
+        }
         if (onEnded) {
           audioRef.current.removeEventListener('ended', onEnded);
         }

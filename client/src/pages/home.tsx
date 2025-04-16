@@ -36,25 +36,34 @@ export default function Home() {
 
   // Handle progression to next audio chunk when current one finishes
   const handleAudioEnded = () => {
+    console.log(`Audio chunk ${currentChunkIndex} finished playing`);
     const nextChunkIndex = currentChunkIndex + 1;
+    
     if (nextChunkIndex < streamingChunks.length) {
       // We have another chunk available, move to it
+      console.log(`Moving to next chunk: ${nextChunkIndex} of ${streamingChunks.length}`);
       setCurrentChunkIndex(nextChunkIndex);
       setCurrentStreamingUrl(streamingChunks[nextChunkIndex]);
-      console.log(`Moving to next chunk: ${nextChunkIndex} of ${streamingChunks.length}`);
     } else {
-      console.log("No more chunks available yet");
+      console.log("No more chunks available yet, waiting for the next chunk");
       // We'll wait for the next chunk to become available
     }
   };
 
   // Handle a new audio chunk becoming available
   const handleChunkReady = (chunkUrl: string, isFirstChunk: boolean, chunkIndex?: number) => {
+    console.log(`New audio chunk available: ${chunkUrl}, isFirst: ${isFirstChunk}, index: ${chunkIndex}`);
+    
     // Keep track of all streaming chunks
-    setStreamingChunks(prev => [...prev, chunkUrl]);
+    setStreamingChunks(prev => {
+      const newChunks = [...prev, chunkUrl];
+      console.log(`Updated streaming chunks array, now has ${newChunks.length} chunks`);
+      return newChunks;
+    });
     
     // If this is the first chunk, start progressive playback
     if (isFirstChunk) {
+      console.log("Starting progressive playback with first chunk");
       setIsStreamingPlayback(true);
       setCurrentStreamingUrl(chunkUrl);
       setCurrentChunkIndex(0);
@@ -64,6 +73,11 @@ export default function Home() {
         streamingAudio.pause();
         setStreamingAudio(null);
       }
+    }
+    
+    // If we're at the end of current chunks and a new one arrives, let's auto-advance
+    if (currentChunkIndex === streamingChunks.length - 1) {
+      console.log("Current chunk is the last one, checking if we need to auto-advance");
     }
   };
   
