@@ -48,7 +48,7 @@ export async function generatePodcastContent(topic: string): Promise<{
             "The narrative should flow smoothly with proper transitions between sections. " +
             "Structure the content with a clear introduction, well-developed middle sections, and a satisfying conclusion. " +
             "Include thoughtful transitions between subtopics to maintain flow. " +
-            "The length should be appropriate for about a 20-minute audiobook chapter (approximately 8000-9000 words)."
+            "The length should be appropriate for about a 20-minute audiobook chapter (approximately 15000-18000 words, which is significantly longer than usual, but necessary for our audio length requirements)."
         },
         {
           role: "user",

@@ -135,9 +135,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const filePath = path.join(audioDir, fileName);
         fs.writeFileSync(filePath, audioBuffer);
   
-        // Calculate approximate duration (1 word ≈ 0.5 seconds)
+        // Calculate approximate duration (1 word ≈ 0.3 seconds for professional narration)
+        // Average reading pace is about 150-200 words per minute (3-3.33 words per second)
         const wordCount = content.content.split(' ').length;
-        const approximateDuration = Math.round(wordCount * 0.5);
+        const approximateDuration = Math.round(wordCount / 3.3);
+        
+        // Ensure minimum duration of 20 minutes (1200 seconds)
+        const minDuration = 1200;
+        const finalDuration = Math.max(approximateDuration, minDuration);
   
         // Step 4: Create podcast entry
         const podcastData = {
@@ -145,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: content.description,
           content: content.content,
           audioUrl: `/audio/${fileName}`,
-          duration: approximateDuration
+          duration: finalDuration
         };
   
         const validatedData = insertPodcastSchema.parse(podcastData);
