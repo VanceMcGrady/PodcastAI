@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import path from "path";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "sk-dummy" });
@@ -192,8 +193,17 @@ export async function generatePodcastContent(topic: string): Promise<{
   }
 }
 
+interface AudioChunkCallback {
+  (chunkIndex: number, totalChunks: number, chunkPath: string): void;
+}
+
 // Convert text to speech using OpenAI TTS
-export async function textToSpeech(text: string, eventEmitter?: any): Promise<Buffer> {
+export async function textToSpeech(
+  text: string, 
+  eventEmitter?: any, 
+  streamingDir?: string,
+  onChunkReady?: AudioChunkCallback
+): Promise<Buffer> {
   try {
     // TTS-1 has a character limit of 4096, so we need to split long text
     const MAX_CHUNK_SIZE = 4000; // slightly less than 4096 to be safe
@@ -303,6 +313,15 @@ export async function textToSpeech(text: string, eventEmitter?: any): Promise<Bu
         const buffer = Buffer.from(await mp3.arrayBuffer());
         fs.writeFileSync(chunkPath, buffer);
         audioFiles.push(chunkPath);
+        
+        // If streamingDir is provided, save a copy of the chunk there for progressive streaming
+        if (streamingDir && onChunkReady) {
+          const streamingPath = path.join(streamingDir, `chunk-${i.toString().padStart(3, '0')}.mp3`);
+          fs.writeFileSync(streamingPath, buffer);
+          
+          // Notify that a chunk is ready for streaming
+          onChunkReady(i, totalChunks, streamingPath);
+        }
         
         console.log(`Successfully generated audio for chunk ${i+1}`);
       } catch (error) {

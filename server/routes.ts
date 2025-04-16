@@ -116,6 +116,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Step 2: Begin text-to-speech conversion
         sendProgress(30, "Content ready! Starting voice generation...");
         
+        // Create a unique ID and directory for this podcast
+        const podcastId = Date.now().toString();
+        const streamingDir = path.join(audioDir, `temp-${podcastId}`);
+        fs.mkdirSync(streamingDir, { recursive: true });
+        
         // Set up event emitter for progress updates during speech generation
         const eventEmitter = new EventEmitter();
         
@@ -132,8 +137,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
         });
         
-        // Pass the event emitter to the text-to-speech function
-        const audioBuffer = await textToSpeech(content.content, eventEmitter);
+        // Function to handle chunks as they become available for streaming
+        const onChunkReady = (chunkIndex: number, totalChunks: number, chunkPath: string) => {
+          // Send a streaming update with the chunk URL
+          const relativeChunkPath = path.relative(audioDir, chunkPath);
+          const chunkUrl = `/audio/${relativeChunkPath}`;
+          
+          const streamingUpdate = JSON.stringify({
+            status: "chunk_ready",
+            chunkIndex,
+            totalChunks,
+            audioUrl: chunkUrl,
+            isFirstChunk: chunkIndex === 0
+          }) + "\n";
+          
+          res.write(streamingUpdate);
+        };
+        
+        // Pass the event emitter and streaming directory to the text-to-speech function
+        const audioBuffer = await textToSpeech(
+          content.content, 
+          eventEmitter,
+          streamingDir, 
+          onChunkReady
+        );
   
         // Step 3: Save audio file
         sendProgress(85, "Processing final audio...");
@@ -172,6 +199,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }) + "\n";
         res.write(completion);
         res.end();
+        
+        // Step 6: Clean up temporary directory in the background
+        try {
+          if (fs.existsSync(streamingDir)) {
+            fs.rm(streamingDir, { recursive: true, force: true }, (err) => {
+              if (err) {
+                console.error("Error cleaning up streaming directory:", err);
+              }
+            });
+          }
+        } catch (cleanupError) {
+          console.error("Error during cleanup:", cleanupError);
+        }
       } catch (innerError) {
         console.error("Inner error generating podcast:", innerError);
         const errorMessage = innerError instanceof Error ? innerError.message : "Unknown error";
@@ -204,6 +244,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: "Audio file not found" });
+    }
+    
+    res.sendFile(filePath);
+  });
+  
+  // Serve temporary audio chunks for progressive streaming
+  app.get("/audio/:tempDir/:filename", (req: Request, res: Response) => {
+    const { tempDir, filename } = req.params;
+    const filePath = path.join(audioDir, tempDir, filename);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Audio chunk not found" });
     }
     
     res.sendFile(filePath);
