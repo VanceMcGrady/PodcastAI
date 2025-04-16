@@ -35,40 +35,155 @@ export async function generatePodcastContent(topic: string): Promise<{
   content: string;
 }> {
   try {
-    const response = await openai.chat.completions.create({
+    // Step 1: Generate the title and description first
+    const initialResponse = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
           content: 
             "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
-            "Focus on creating content that's eloquent, immersive, and educational with a warm narrative voice. " +
-            "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
-            "Avoid podcast-specific elements like host introductions, interjections, or references to 'listeners' or 'episodes'. " +
-            "The narrative should flow smoothly with proper transitions between sections. " +
-            "Structure the content with a clear introduction, well-developed middle sections, and a satisfying conclusion. " +
-            "Include thoughtful transitions between subtopics to maintain flow. " +
-            "The length should be appropriate for about a 20-minute audiobook chapter (approximately 15000-18000 words, which is significantly longer than usual, but necessary for our audio length requirements)."
+            "Create an elegant title and brief description for a 20-minute educational audiobook."
         },
         {
           role: "user",
-          content: `Create an audiobook chapter about "${topic}". Provide a JSON response with the following structure: 
+          content: `Create a title and description for an educational audiobook about "${topic}". Provide a JSON response with the following structure: 
           {
             "title": "An elegant title for the audiobook",
-            "description": "A brief 1-2 sentence description of what the audiobook chapter covers",
-            "content": "The full audiobook chapter content"
+            "description": "A brief 1-2 sentence description of what the audiobook covers"
           }`
         }
       ],
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const initialResult = JSON.parse(initialResponse.choices[0].message.content || "{}");
+    
+    const title = initialResult.title || `Audiobook about ${topic}`;
+    const description = initialResult.description || `An educational audiobook exploring ${topic}`;
+    
+    // Step 2: Create a detailed outline for a 6-part audiobook
+    const outlineResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
+            "Create a detailed outline for a 6-part educational audiobook."
+        },
+        {
+          role: "user",
+          content: `Create a detailed outline for a 6-part educational audiobook titled "${title}" about "${topic}". Each part should cover a key aspect of the topic. Provide a JSON response with the following structure: 
+          {
+            "outline": [
+              {"part": 1, "title": "Part 1 title", "focus": "Brief description of what part 1 will cover"},
+              {"part": 2, "title": "Part 2 title", "focus": "Brief description of what part 2 will cover"},
+              {"part": 3, "title": "Part 3 title", "focus": "Brief description of what part 3 will cover"},
+              {"part": 4, "title": "Part 4 title", "focus": "Brief description of what part 4 will cover"},
+              {"part": 5, "title": "Part 5 title", "focus": "Brief description of what part 5 will cover"},
+              {"part": 6, "title": "Part 6 title", "focus": "Brief description of what part 6 will cover"}
+            ]
+          }`
+        }
+      ],
+      response_format: { type: "json_object" },
+    });
+    
+    const outlineResult = JSON.parse(outlineResponse.choices[0].message.content || "{}");
+    const outline = outlineResult.outline || [];
+    
+    // Step 3: Generate each part with approximately 1500 words each (should result in ~9000 words total)
+    let fullContent = "";
+    
+    // Introduction
+    const introResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
+            "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
+            "Focus on creating a compelling introduction that sets up the topic."
+        },
+        {
+          role: "user",
+          content: `Write a 500-word introduction for an audiobook titled "${title}" about "${topic}". This should introduce the overall topic and provide a roadmap for what will be covered. Provide a JSON response with the following structure: 
+          {
+            "content": "The introduction content goes here"
+          }`
+        }
+      ],
+      response_format: { type: "json_object" },
+    });
+    
+    const introResult = JSON.parse(introResponse.choices[0].message.content || "{}");
+    fullContent += introResult.content || "";
+    fullContent += "\n\n";
+    
+    // Generate each part of the content
+    for (let i = 0; i < outline.length; i++) {
+      const part = outline[i];
+      if (!part) continue;
+      
+      const partResponse = await openai.chat.completions.create({
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "system",
+            content: 
+              "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
+              "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
+              "Focus on creating educational content that's eloquent, immersive, and informative."
+          },
+          {
+            role: "user",
+            content: `Write a 1500-word section for part ${part.part} titled "${part.title}" of an audiobook about "${topic}". This part should focus on: ${part.focus}. Provide a JSON response with the following structure: 
+            {
+              "content": "The content for this part goes here"
+            }`
+          }
+        ],
+        response_format: { type: "json_object" },
+      });
+      
+      const partResult = JSON.parse(partResponse.choices[0].message.content || "{}");
+      fullContent += `## ${part.title}\n\n`;
+      fullContent += partResult.content || "";
+      fullContent += "\n\n";
+    }
+    
+    // Conclusion
+    const conclusionResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
+            "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
+            "Focus on creating a satisfying conclusion that summarizes key points."
+        },
+        {
+          role: "user",
+          content: `Write a 500-word conclusion for an audiobook titled "${title}" about "${topic}". This should summarize what was covered and provide final thoughts. Provide a JSON response with the following structure: 
+          {
+            "content": "The conclusion content goes here"
+          }`
+        }
+      ],
+      response_format: { type: "json_object" },
+    });
+    
+    const conclusionResult = JSON.parse(conclusionResponse.choices[0].message.content || "{}");
+    fullContent += "## Conclusion\n\n";
+    fullContent += conclusionResult.content || "";
     
     return {
-      title: result.title || `Podcast about ${topic}`,
-      description: result.description || `A podcast exploring ${topic}`,
-      content: result.content || `Failed to generate content for ${topic}`
+      title,
+      description,
+      content: fullContent
     };
   } catch (error: unknown) {
     console.error("Error generating podcast content:", error);

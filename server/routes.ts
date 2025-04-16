@@ -99,10 +99,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       try {
-        // Step 1: Generate content for longer 20-minute audio
-        sendProgress(5, "Understanding your topic...");
-        setTimeout(() => sendProgress(10, "Researching educational content..."), 3000);
-        setTimeout(() => sendProgress(15, "Crafting your comprehensive Learncast..."), 6000);
+        // Step 1: Generate content for longer 20-minute audio using multi-step process
+        // This will involve multiple API calls to build a structured audiobook
+        sendProgress(2, "Understanding your topic...");
+        setTimeout(() => sendProgress(5, "Creating title and description..."), 2000);
+        setTimeout(() => sendProgress(8, "Planning audiobook structure..."), 5000);
+        setTimeout(() => sendProgress(10, "Drafting outline..."), 8000);
+        setTimeout(() => sendProgress(12, "Writing introduction..."), 15000);
+        setTimeout(() => sendProgress(15, "Developing chapters..."), 25000);
+        setTimeout(() => sendProgress(20, "Adding educational details..."), 35000);
+        setTimeout(() => sendProgress(25, "Writing conclusion..."), 45000);
+        
+        // Will make multiple API calls to build a comprehensive content
         const content = await generatePodcastContent(topic);
         
         // Step 2: Begin text-to-speech conversion

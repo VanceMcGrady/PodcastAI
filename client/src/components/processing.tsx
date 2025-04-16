@@ -41,10 +41,13 @@ export function Processing({ progress, step }: ProcessingProps) {
         </h3>
         
         <p className="text-gray-500 text-center mb-2">
-          This might take a few minutes. We're creating a high-quality 20-minute educational audiobook.
+          This takes a few minutes. We're creating a high-quality 20-minute educational audiobook.
         </p>
-        <p className="text-xs text-gray-400 text-center">
-          Creating longer content requires breaking it into smaller chunks and carefully processing each section.
+        <p className="text-xs text-gray-400 text-center mb-1">
+          The process involves multiple steps: planning content structure, writing chapters,
+        </p>
+        <p className="text-xs text-gray-400 text-center mb-2">
+          generating professional narration, and assembling the final audiobook.
         </p>
         
         <div className="w-full max-w-xs mt-8">
