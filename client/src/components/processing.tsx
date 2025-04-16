@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
+import { StreamingPlayer } from "@/components/streaming-player";
 
 interface ProcessingProps {
   progress: number;
   step: string;
   isStreamingAvailable?: boolean;
   streamingStatus?: string;
+  streamingUrl?: string;
 }
 
 export function Processing({ 
   progress, 
   step, 
   isStreamingAvailable = false,
-  streamingStatus
+  streamingStatus,
+  streamingUrl
 }: ProcessingProps) {
+  const [isPlaying, setIsPlaying] = useState(true); // Auto-play when available
   const [animatedProgress, setAnimatedProgress] = useState(0);
   
   // Smoothly animate the progress
@@ -74,7 +78,13 @@ export function Processing({
             ></div>
           </div>
           
-          {isStreamingAvailable && streamingStatus && (
+          {isStreamingAvailable && streamingStatus && streamingUrl ? (
+            <StreamingPlayer 
+              audioUrl={streamingUrl}
+              isPlaying={isPlaying}
+              onPlayPause={() => setIsPlaying(!isPlaying)}
+            />
+          ) : isStreamingAvailable && streamingStatus ? (
             <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
               <div className="flex items-center">
                 <div className="flex-shrink-0 flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 mr-3">
@@ -96,7 +106,7 @@ export function Processing({
                 <span className="material-icons text-blue-500 text-lg ml-2">volume_up</span>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

@@ -28,7 +28,11 @@ export async function generatePodcast(
       } else if (data.status === 'completed') {
         podcast = data.podcast;
         eventSource.close();
-        resolve(podcast);
+        if (podcast) {
+          resolve(podcast);
+        } else {
+          reject(new Error('No podcast data returned from server'));
+        }
       } else if (data.status === 'error') {
         eventSource.close();
         reject(new Error(data.message || 'Failed to generate podcast'));

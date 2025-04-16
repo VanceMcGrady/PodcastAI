@@ -23,6 +23,7 @@ export default function Home() {
   const [streamingChunks, setStreamingChunks] = useState<string[]>([]);
   const [isStreamingPlayback, setIsStreamingPlayback] = useState(false);
   const [streamingAudio, setStreamingAudio] = useState<HTMLAudioElement | null>(null);
+  const [currentStreamingUrl, setCurrentStreamingUrl] = useState<string | undefined>();
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
@@ -39,6 +40,7 @@ export default function Home() {
     // If this is the first chunk and we're not already playing, start playback
     if (isFirstChunk && !isStreamingPlayback) {
       setIsStreamingPlayback(true);
+      setCurrentStreamingUrl(chunkUrl);
       
       // Create an audio element for the chunk if not already playing
       if (!streamingAudio) {
@@ -57,6 +59,7 @@ export default function Home() {
       setStep("Analyzing topic...");
       setStreamingChunks([]);
       setIsStreamingPlayback(false);
+      setCurrentStreamingUrl(undefined);
       if (streamingAudio) {
         streamingAudio.pause();
         setStreamingAudio(null);
