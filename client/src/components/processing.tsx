@@ -3,9 +3,16 @@ import { useEffect, useState } from "react";
 interface ProcessingProps {
   progress: number;
   step: string;
+  isStreamingAvailable?: boolean;
+  streamingStatus?: string;
 }
 
-export function Processing({ progress, step }: ProcessingProps) {
+export function Processing({ 
+  progress, 
+  step, 
+  isStreamingAvailable = false,
+  streamingStatus
+}: ProcessingProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
   
   // Smoothly animate the progress

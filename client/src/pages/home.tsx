@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Recorder } from "@/components/recorder";
 import { Processing } from "@/components/processing";
 import { PodcastPlayer } from "@/components/podcast-player";
 import { ErrorView } from "@/components/error-view";
 import { RecentPodcasts } from "@/components/recent-podcasts";
 import { generatePodcastFetch } from "@/lib/podcast";
+import { AudioPlayer } from "@/lib/audio";
 import type { Podcast } from "@shared/schema";
 
 type AppState = "recording" | "processing" | "player" | "error";
@@ -17,6 +18,11 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState("Initializing...");
   const [refreshRecent, setRefreshRecent] = useState(false);
+  
+  // Progressive streaming state
+  const [streamingChunks, setStreamingChunks] = useState<string[]>([]);
+  const [isStreamingPlayback, setIsStreamingPlayback] = useState(false);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
@@ -26,23 +32,61 @@ export default function Home() {
     generatePodcast(newTranscript);
   };
 
+  // Handle a new audio chunk becoming available
+  const handleChunkReady = (chunkUrl: string, isFirstChunk: boolean) => {
+    setStreamingChunks(prev => [...prev, chunkUrl]);
+    
+    // If this is the first chunk and we're not already playing, start playback
+    if (isFirstChunk && !isStreamingPlayback) {
+      setIsStreamingPlayback(true);
+      
+      // Create an audio element for the chunk if not already playing
+      if (!audioPlayerRef.current) {
+        const audioEl = new Audio(chunkUrl);
+        audioPlayerRef.current = audioEl;
+        audioEl.play().catch(err => console.error("Error playing first chunk:", err));
+      }
+    }
+  };
+  
+  // Generate podcast with progressive streaming
   const generatePodcast = async (topic: string) => {
     try {
+      // Reset states
       setProgress(0);
       setStep("Analyzing topic...");
+      setStreamingChunks([]);
+      setIsStreamingPlayback(false);
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
       
       const newPodcast = await generatePodcastFetch(
         topic,
         (newProgress, newStep) => {
           setProgress(newProgress);
           setStep(newStep);
-        }
+        },
+        handleChunkReady // Pass the chunk handler
       );
+      
+      // Clean up audio player when complete
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
       
       setPodcast(newPodcast);
       setAppState("player");
       setRefreshRecent(prev => !prev); // Toggle to refresh the recent podcasts list
     } catch (err) {
+      // Clean up audio player on error
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+      
       setError(err instanceof Error ? err : new Error("Failed to generate podcast"));
       setAppState("error");
     }
@@ -89,7 +133,12 @@ export default function Home() {
           )}
           
           {appState === "processing" && (
-            <Processing progress={progress} step={step} />
+            <Processing 
+              progress={progress} 
+              step={step} 
+              isStreamingAvailable={isStreamingPlayback}
+              streamingStatus={isStreamingPlayback ? "Listening to the beginning while the rest is being created..." : undefined}
+            />
           )}
           
           {appState === "player" && podcast && (

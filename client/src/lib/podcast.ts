@@ -43,10 +43,16 @@ export async function generatePodcast(
   });
 }
 
+interface StreamingCallbacks {
+  onProgress: (progress: number, step: string) => void;
+  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean) => void;
+}
+
 // Alternative version that uses fetch instead of EventSource
 export async function generatePodcastFetch(
   topic: string,
-  onProgress: (progress: number, step: string) => void
+  onProgress: (progress: number, step: string) => void,
+  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean) => void
 ): Promise<Podcast> {
   try {
     const response = await fetch('/api/generate-podcast', {
@@ -89,6 +95,9 @@ export async function generatePodcastFetch(
           
           if (data.status === 'generating') {
             onProgress(data.progress, data.step);
+          } else if (data.status === 'chunk_ready' && onChunkReady) {
+            // A new audio chunk is ready for progressive streaming
+            onChunkReady(data.audioUrl, data.isFirstChunk);
           } else if (data.status === 'completed') {
             return data.podcast;
           } else if (data.status === 'error') {
@@ -111,6 +120,8 @@ export async function generatePodcastFetch(
               
               if (data.status === 'generating') {
                 onProgress(data.progress, data.step);
+              } else if (data.status === 'chunk_ready' && onChunkReady) {
+                onChunkReady(data.audioUrl, data.isFirstChunk);
               } else if (data.status === 'completed') {
                 return data.podcast;
               } else if (data.status === 'error') {
