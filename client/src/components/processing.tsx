@@ -40,8 +40,11 @@ export function Processing({ progress, step }: ProcessingProps) {
           Creating your Learncast...
         </h3>
         
-        <p className="text-gray-500 text-center">
-          This might take a few minutes. We're creating a high-quality 20-minute audio.
+        <p className="text-gray-500 text-center mb-2">
+          This might take a few minutes. We're creating a high-quality 20-minute educational audiobook.
+        </p>
+        <p className="text-xs text-gray-400 text-center">
+          Creating longer content requires breaking it into smaller chunks and carefully processing each section.
         </p>
         
         <div className="w-full max-w-xs mt-8">
