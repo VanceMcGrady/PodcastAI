@@ -99,11 +99,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         // Step 1: Generate content for longer 20-minute audio
-        sendProgress(15, "Crafting your Learncast content...");
+        sendProgress(5, "Understanding your topic...");
+        setTimeout(() => sendProgress(10, "Researching educational content..."), 3000);
+        setTimeout(() => sendProgress(15, "Crafting your comprehensive Learncast..."), 6000);
         const content = await generatePodcastContent(topic);
         
         // Step 2: Begin text-to-speech conversion
-        sendProgress(30, "Starting audio generation...");
+        sendProgress(30, "Content ready! Starting voice generation...");
         
         // Set up event emitter for progress updates during speech generation
         const eventEmitter = new (require('events').EventEmitter)();
@@ -125,7 +127,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const audioBuffer = await textToSpeech(content.content, eventEmitter);
   
         // Step 3: Save audio file
-        sendProgress(85, "Finalizing your Learncast...");
+        sendProgress(85, "Processing final audio...");
+        setTimeout(() => sendProgress(90, "Applying audio enhancements..."), 2000);
+        setTimeout(() => sendProgress(95, "Finalizing your Learncast..."), 4000); 
         const fileName = `learncast-${Date.now()}.mp3`;
         const filePath = path.join(audioDir, fileName);
         fs.writeFileSync(filePath, audioBuffer);
