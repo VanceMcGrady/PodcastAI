@@ -168,7 +168,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex-1 flex flex-col">
       <h2 className="text-lg font-semibold text-center mb-6">
-        What topic for your 20-minute Learncast?
+        What topic for your Learncast?
       </h2>
       
       <div className="flex-1 flex flex-col items-center justify-center">
@@ -243,7 +243,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 ref={textInputRef}
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Describe a topic for your 20-minute Learncast..."
+                placeholder="Describe a topic for your Learncast..."
                 className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[80px] shadow-sm"
                 required
               />
