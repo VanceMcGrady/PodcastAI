@@ -35,18 +35,18 @@ export default function Home() {
 
   // Handle a new audio chunk becoming available
   const handleChunkReady = (chunkUrl: string, isFirstChunk: boolean) => {
+    // Keep track of all streaming chunks
     setStreamingChunks(prev => [...prev, chunkUrl]);
     
-    // If this is the first chunk and we're not already playing, start playback
-    if (isFirstChunk && !isStreamingPlayback) {
+    // If this is the first chunk, start progressive playback
+    if (isFirstChunk) {
       setIsStreamingPlayback(true);
       setCurrentStreamingUrl(chunkUrl);
       
-      // Create an audio element for the chunk if not already playing
-      if (!streamingAudio) {
-        const audioEl = new Audio(chunkUrl);
-        setStreamingAudio(audioEl);
-        audioEl.play().catch(err => console.error("Error playing first chunk:", err));
+      // Clean up any existing audio
+      if (streamingAudio) {
+        streamingAudio.pause();
+        setStreamingAudio(null);
       }
     }
   };
@@ -141,6 +141,7 @@ export default function Home() {
               step={step} 
               isStreamingAvailable={isStreamingPlayback}
               streamingStatus={isStreamingPlayback ? "Listening to the beginning while the rest is being created..." : undefined}
+              streamingUrl={currentStreamingUrl}
             />
           )}
           
