@@ -73,6 +73,30 @@ export function Processing({
               style={{ width: `${animatedProgress}%` }}
             ></div>
           </div>
+          
+          {isStreamingAvailable && streamingStatus && (
+            <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 mr-3">
+                  <span className="material-icons text-blue-500 text-sm">headphones</span>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-blue-700 font-medium">
+                    {streamingStatus}
+                  </div>
+                  <div className="mt-1 text-xs text-blue-500">
+                    The full audiobook will be available when processing is complete.
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <div className="w-full max-w-[85%] bg-blue-100 h-1 rounded-full overflow-hidden">
+                  <div className="bg-blue-400 h-1 w-1/3 rounded-full animate-pulse"></div>
+                </div>
+                <span className="material-icons text-blue-500 text-lg ml-2">volume_up</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

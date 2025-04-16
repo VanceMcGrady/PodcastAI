@@ -22,7 +22,7 @@ export default function Home() {
   // Progressive streaming state
   const [streamingChunks, setStreamingChunks] = useState<string[]>([]);
   const [isStreamingPlayback, setIsStreamingPlayback] = useState(false);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const [streamingAudio, setStreamingAudio] = useState<HTMLAudioElement | null>(null);
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
@@ -41,9 +41,9 @@ export default function Home() {
       setIsStreamingPlayback(true);
       
       // Create an audio element for the chunk if not already playing
-      if (!audioPlayerRef.current) {
+      if (!streamingAudio) {
         const audioEl = new Audio(chunkUrl);
-        audioPlayerRef.current = audioEl;
+        setStreamingAudio(audioEl);
         audioEl.play().catch(err => console.error("Error playing first chunk:", err));
       }
     }
@@ -57,9 +57,9 @@ export default function Home() {
       setStep("Analyzing topic...");
       setStreamingChunks([]);
       setIsStreamingPlayback(false);
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current = null;
+      if (streamingAudio) {
+        streamingAudio.pause();
+        setStreamingAudio(null);
       }
       
       const newPodcast = await generatePodcastFetch(
@@ -72,9 +72,9 @@ export default function Home() {
       );
       
       // Clean up audio player when complete
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current = null;
+      if (streamingAudio) {
+        streamingAudio.pause();
+        setStreamingAudio(null);
       }
       
       setPodcast(newPodcast);
@@ -82,9 +82,9 @@ export default function Home() {
       setRefreshRecent(prev => !prev); // Toggle to refresh the recent podcasts list
     } catch (err) {
       // Clean up audio player on error
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current = null;
+      if (streamingAudio) {
+        streamingAudio.pause();
+        setStreamingAudio(null);
       }
       
       setError(err instanceof Error ? err : new Error("Failed to generate podcast"));
