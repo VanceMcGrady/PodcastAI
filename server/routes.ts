@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { insertPodcastSchema } from "@shared/schema";
+import { EventEmitter } from "events";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -108,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sendProgress(30, "Content ready! Starting voice generation...");
         
         // Set up event emitter for progress updates during speech generation
-        const eventEmitter = new (require('events').EventEmitter)();
+        const eventEmitter = new EventEmitter();
         
         // Listen for speech generation progress events
         eventEmitter.on('speech-progress', (data: { chunkIndex: number, totalChunks: number }) => {
