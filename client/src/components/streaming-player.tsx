@@ -5,9 +5,10 @@ interface StreamingPlayerProps {
   audioUrl: string;
   isPlaying: boolean;
   onPlayPause: () => void;
+  onEnded?: () => void; // Callback for when audio finishes playing
 }
 
-export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause }: StreamingPlayerProps) {
+export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause, onEnded }: StreamingPlayerProps) {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -24,16 +25,26 @@ export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause }: StreamingP
           setProgress((currentTime / duration) * 100);
         }
       });
+      
+      // Set up ended event
+      if (onEnded) {
+        audioRef.current.addEventListener('ended', onEnded);
+      }
     }
     
     return () => {
       // Clean up when component unmounts
       if (audioRef.current) {
+        // Remove all event listeners
+        audioRef.current.removeEventListener('timeupdate', () => {});
+        if (onEnded) {
+          audioRef.current.removeEventListener('ended', onEnded);
+        }
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, [audioUrl]);
+  }, [audioUrl, onEnded]);
   
   // Update play/pause state when isPlaying prop changes
   useEffect(() => {

@@ -24,6 +24,7 @@ export default function Home() {
   const [isStreamingPlayback, setIsStreamingPlayback] = useState(false);
   const [streamingAudio, setStreamingAudio] = useState<HTMLAudioElement | null>(null);
   const [currentStreamingUrl, setCurrentStreamingUrl] = useState<string | undefined>();
+  const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
@@ -33,8 +34,22 @@ export default function Home() {
     generatePodcast(newTranscript);
   };
 
+  // Handle progression to next audio chunk when current one finishes
+  const handleAudioEnded = () => {
+    const nextChunkIndex = currentChunkIndex + 1;
+    if (nextChunkIndex < streamingChunks.length) {
+      // We have another chunk available, move to it
+      setCurrentChunkIndex(nextChunkIndex);
+      setCurrentStreamingUrl(streamingChunks[nextChunkIndex]);
+      console.log(`Moving to next chunk: ${nextChunkIndex} of ${streamingChunks.length}`);
+    } else {
+      console.log("No more chunks available yet");
+      // We'll wait for the next chunk to become available
+    }
+  };
+
   // Handle a new audio chunk becoming available
-  const handleChunkReady = (chunkUrl: string, isFirstChunk: boolean) => {
+  const handleChunkReady = (chunkUrl: string, isFirstChunk: boolean, chunkIndex?: number) => {
     // Keep track of all streaming chunks
     setStreamingChunks(prev => [...prev, chunkUrl]);
     
@@ -42,6 +57,7 @@ export default function Home() {
     if (isFirstChunk) {
       setIsStreamingPlayback(true);
       setCurrentStreamingUrl(chunkUrl);
+      setCurrentChunkIndex(0);
       
       // Clean up any existing audio
       if (streamingAudio) {
@@ -140,8 +156,12 @@ export default function Home() {
               progress={progress} 
               step={step} 
               isStreamingAvailable={isStreamingPlayback}
-              streamingStatus={isStreamingPlayback ? "Listening to the beginning while the rest is being created..." : undefined}
+              streamingStatus={isStreamingPlayback 
+                ? `Listening to part ${currentChunkIndex + 1} of ${streamingChunks.length} while the rest is being created...` 
+                : undefined
+              }
               streamingUrl={currentStreamingUrl}
+              onAudioEnded={handleAudioEnded}
             />
           )}
           
