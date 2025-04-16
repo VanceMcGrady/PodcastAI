@@ -78,7 +78,7 @@ export async function generatePodcastContent(topic: string): Promise<{
 }
 
 // Convert text to speech using OpenAI TTS
-export async function textToSpeech(text: string): Promise<Buffer> {
+export async function textToSpeech(text: string, eventEmitter?: any): Promise<Buffer> {
   try {
     // TTS-1 has a character limit of 4096, so we need to split long text
     const MAX_CHUNK_SIZE = 4000; // slightly less than 4096 to be safe
@@ -164,9 +164,18 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     
     // Process each chunk into speech
     const audioFiles: string[] = [];
+    const totalChunks = chunks.length;
     
-    for (let i = 0; i < chunks.length; i++) {
-      console.log(`Processing chunk ${i+1}/${chunks.length}`);
+    for (let i = 0; i < totalChunks; i++) {
+      console.log(`Processing chunk ${i+1}/${totalChunks}`);
+      
+      // Report progress if event emitter is provided
+      if (eventEmitter) {
+        eventEmitter.emit('speech-progress', { 
+          chunkIndex: i, 
+          totalChunks: totalChunks 
+        });
+      }
       
       try {
         const mp3 = await openai.audio.speech.create({

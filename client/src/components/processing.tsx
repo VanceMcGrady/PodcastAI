@@ -37,11 +37,11 @@ export function Processing({ progress, step }: ProcessingProps) {
         </div>
         
         <h3 className="text-lg font-medium text-center mb-2">
-          Creating your podcast...
+          Creating your Learncast...
         </h3>
         
         <p className="text-gray-500 text-center">
-          This might take a minute or two.
+          This might take a few minutes. We're creating a high-quality 20-minute audio.
         </p>
         
         <div className="w-full max-w-xs mt-8">

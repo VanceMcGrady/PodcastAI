@@ -98,17 +98,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       try {
-        // Step 1: Generate content
-        sendProgress(25, "Generating content...");
+        // Step 1: Generate content for longer 20-minute audio
+        sendProgress(15, "Crafting your Learncast content...");
         const content = await generatePodcastContent(topic);
-  
-        // Step 2: Convert to speech
-        sendProgress(50, "Converting to speech...");
-        const audioBuffer = await textToSpeech(content.content);
+        
+        // Step 2: Begin text-to-speech conversion
+        sendProgress(30, "Starting audio generation...");
+        
+        // Set up event emitter for progress updates during speech generation
+        const eventEmitter = new (require('events').EventEmitter)();
+        
+        // Listen for speech generation progress events
+        eventEmitter.on('speech-progress', (data: { chunkIndex: number, totalChunks: number }) => {
+          const { chunkIndex, totalChunks } = data;
+          const baseProgress = 30; // Start at 30%
+          const progressPerChunk = 50 / totalChunks; // 50% of the process is speech generation
+          const chunkProgress = Math.round(baseProgress + (chunkIndex * progressPerChunk));
+          
+          sendProgress(
+            chunkProgress, 
+            `Converting part ${chunkIndex + 1} of ${totalChunks} to speech...`
+          );
+        });
+        
+        // Pass the event emitter to the text-to-speech function
+        const audioBuffer = await textToSpeech(content.content, eventEmitter);
   
         // Step 3: Save audio file
-        sendProgress(75, "Finalizing podcast...");
-        const fileName = `podcast-${Date.now()}.mp3`;
+        sendProgress(85, "Finalizing your Learncast...");
+        const fileName = `learncast-${Date.now()}.mp3`;
         const filePath = path.join(audioDir, fileName);
         fs.writeFileSync(filePath, audioBuffer);
   
