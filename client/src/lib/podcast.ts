@@ -56,7 +56,7 @@ interface StreamingCallbacks {
 export async function generatePodcastFetch(
   topic: string,
   onProgress: (progress: number, step: string) => void,
-  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean) => void
+  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean, chunkIndex?: number) => void
 ): Promise<Podcast> {
   try {
     const response = await fetch('/api/generate-podcast', {
@@ -101,7 +101,7 @@ export async function generatePodcastFetch(
             onProgress(data.progress, data.step);
           } else if (data.status === 'chunk_ready' && onChunkReady) {
             // A new audio chunk is ready for progressive streaming
-            onChunkReady(data.audioUrl, data.isFirstChunk);
+            onChunkReady(data.audioUrl, data.isFirstChunk, data.chunkIndex);
           } else if (data.status === 'completed') {
             return data.podcast;
           } else if (data.status === 'error') {
@@ -125,7 +125,7 @@ export async function generatePodcastFetch(
               if (data.status === 'generating') {
                 onProgress(data.progress, data.step);
               } else if (data.status === 'chunk_ready' && onChunkReady) {
-                onChunkReady(data.audioUrl, data.isFirstChunk);
+                onChunkReady(data.audioUrl, data.isFirstChunk, data.chunkIndex);
               } else if (data.status === 'completed') {
                 return data.podcast;
               } else if (data.status === 'error') {

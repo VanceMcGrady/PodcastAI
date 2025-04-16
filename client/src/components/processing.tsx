@@ -7,6 +7,7 @@ interface ProcessingProps {
   isStreamingAvailable?: boolean;
   streamingStatus?: string;
   streamingUrl?: string;
+  onAudioEnded?: () => void;
 }
 
 export function Processing({ 
@@ -14,7 +15,8 @@ export function Processing({
   step, 
   isStreamingAvailable = false,
   streamingStatus,
-  streamingUrl
+  streamingUrl,
+  onAudioEnded
 }: ProcessingProps) {
   const [isPlaying, setIsPlaying] = useState(true); // Auto-play when available
   const [animatedProgress, setAnimatedProgress] = useState(0);
@@ -83,6 +85,7 @@ export function Processing({
               audioUrl={streamingUrl}
               isPlaying={isPlaying}
               onPlayPause={() => setIsPlaying(!isPlaying)}
+              onEnded={onAudioEnded}
             />
           ) : isStreamingAvailable && streamingStatus ? (
             <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">

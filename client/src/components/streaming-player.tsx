@@ -68,7 +68,7 @@ export function StreamingPlayer({ audioUrl, isPlaying, onPlayPause, onEnded }: S
           </div>
           <div className="flex-1">
             <div className="text-sm text-blue-700 font-medium">
-              Listening to introduction...
+              Listening to your audiobook...
             </div>
             <div className="mt-1 text-xs text-blue-500">
               The full audiobook will be available when processing is complete.
