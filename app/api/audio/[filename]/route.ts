@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAudioFile } from '../../../lib/audioStorage';
+import { type NextRequest, NextResponse } from "next/server";
+import { getAudioFile } from "../../../lib/audioStorage";
 
 export async function GET(
   request: NextRequest,
@@ -7,28 +7,28 @@ export async function GET(
 ) {
   try {
     const filename = params.filename;
-    
+
     // Get the audio buffer using our helper function
     const audioBuffer = await getAudioFile(filename);
-    
+
     if (!audioBuffer) {
       return NextResponse.json(
         { message: "Audio file not found" },
         { status: 404 }
       );
     }
-    
+
     // Determine content type based on file extension
-    const contentType = filename.endsWith('.mp3') 
-      ? 'audio/mpeg' 
-      : 'application/octet-stream';
-    
+    const contentType = filename.endsWith(".mp3")
+      ? "audio/mpeg"
+      : "application/octet-stream";
+
     // Return the audio file
     return new NextResponse(audioBuffer, {
       headers: {
-        'Content-Type': contentType,
-        'Content-Length': audioBuffer.length.toString(),
-        'Cache-Control': 'public, max-age=31536000', // Cache for a year
+        "Content-Type": contentType,
+        "Content-Length": audioBuffer.length.toString(),
+        "Cache-Control": "public, max-age=31536000", // Cache for a year
       },
     });
   } catch (error) {
