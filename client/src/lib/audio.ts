@@ -10,19 +10,20 @@ export class AudioRecorder {
   private volumeDataArray: Uint8Array | null = null;
   private volumeCallback: ((data: Uint8Array) => void) | null = null;
   private analyzeInterval: number | null = null;
-  private maxRecordingDuration: number = 60; // Maximum recording time in seconds
+  private maxRecordingDuration = 60; // Maximum recording time in seconds
   private recordingTimer: number | null = null;
-  private timeRemainingCallback: ((secondsRemaining: number) => void) | null = null;
+  private timeRemainingCallback: ((secondsRemaining: number) => void) | null =
+    null;
 
   // Check if browser supports audio recording
   public static isSupported(): boolean {
-    if (typeof navigator === 'undefined') return false;
+    if (typeof navigator === "undefined") return false;
     if (!navigator.mediaDevices) return false;
     if (!navigator.mediaDevices.getUserMedia) return false;
-    if (typeof window === 'undefined') return false;
-    
+    if (typeof window === "undefined") return false;
+
     // Check for AudioContext support
-    const hasAudioContext = !!(window.AudioContext || (window as any).webkitAudioContext);
+    const hasAudioContext = !!(window.AudioContext || window.AudioContext);
     return hasAudioContext;
   }
 
@@ -31,16 +32,16 @@ export class AudioRecorder {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(this.stream);
-      
+
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
         }
       };
-      
+
       // Set up audio analysis
       this.setupAudioAnalysis();
-      
+
       return Promise.resolve();
     } catch (error) {
       console.error("Error initializing audio recorder:", error);
@@ -51,27 +52,34 @@ export class AudioRecorder {
   // Set up audio context and analyzer for volume visualization
   private setupAudioAnalysis(): void {
     if (!this.stream) return;
-    
+
     try {
       // Use the appropriate AudioContext based on browser support
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass =
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        window.AudioContext || (window as any).webkitAudioContext;
       this.audioContext = new AudioContextClass();
       this.analyser = this.audioContext.createAnalyser();
-      this.mediaStreamSource = this.audioContext.createMediaStreamSource(this.stream);
-      
+      this.mediaStreamSource = this.audioContext.createMediaStreamSource(
+        this.stream
+      );
+
       // Connect the media stream to the analyzer
       this.mediaStreamSource.connect(this.analyser);
-      
+
       // Configure the analyzer for better visualization
       this.analyser.fftSize = 128; // Smaller value for better performance and more responsive visualization
       this.analyser.smoothingTimeConstant = 0.5; // Default is 0.8, lower values = more responsive
       this.analyser.minDecibels = -90; // Default is -100
       this.analyser.maxDecibels = -10; // Default is -30, increase to amplify quieter sounds
-      
+
       const bufferLength = this.analyser.frequencyBinCount;
       this.volumeDataArray = new Uint8Array(bufferLength);
-      
-      console.log("Audio analysis setup complete - buffer length:", bufferLength);
+
+      console.log(
+        "Audio analysis setup complete - buffer length:",
+        bufferLength
+      );
     } catch (error) {
       console.error("Error setting up audio analysis:", error);
     }
@@ -81,55 +89,59 @@ export class AudioRecorder {
   public setMaxRecordingDuration(seconds: number): void {
     this.maxRecordingDuration = Math.max(10, seconds); // Minimum 10 seconds
   }
-  
+
   // Register callback for time remaining updates
-  public onTimeRemainingUpdate(callback: (secondsRemaining: number) => void): void {
+  public onTimeRemainingUpdate(
+    callback: (secondsRemaining: number) => void
+  ): void {
     this.timeRemainingCallback = callback;
   }
-  
+
   // Start recording with auto-stop timer
   public start(): void {
     if (!this.mediaRecorder) {
       throw new Error("Audio recorder not initialized");
     }
-    
+
     this.audioChunks = [];
     this.mediaRecorder.start();
-    
+
     // Start analyzing audio volume if callback is set
     this.startVolumeAnalysis();
-    
+
     // Clear any existing timer
     if (this.recordingTimer !== null) {
       clearInterval(this.recordingTimer);
       this.recordingTimer = null;
     }
-    
+
     // Set up countdown timer
     let secondsRemaining = this.maxRecordingDuration;
-    
+
     // Initial callback to update UI immediately
     if (this.timeRemainingCallback) {
       this.timeRemainingCallback(secondsRemaining);
     }
-    
+
     // Start timer that counts down and eventually stops recording
     this.recordingTimer = window.setInterval(() => {
       secondsRemaining -= 1;
-      
+
       // Update UI with time remaining
       if (this.timeRemainingCallback) {
         this.timeRemainingCallback(secondsRemaining);
       }
-      
+
       // Auto-stop when time runs out
       if (secondsRemaining <= 0) {
         clearInterval(this.recordingTimer as number);
         this.recordingTimer = null;
-        
+
         // Only auto-stop if we're still recording
-        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-          console.log('Auto-stopping recording after reaching maximum duration');
+        if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
+          console.log(
+            "Auto-stopping recording after reaching maximum duration"
+          );
           this.mediaRecorder.stop();
         }
       }
@@ -139,23 +151,23 @@ export class AudioRecorder {
   // Stop recording and return audio blob
   public stop(): Promise<Blob> {
     this.stopVolumeAnalysis();
-    
+
     // Clear the recording timer if it exists
     if (this.recordingTimer !== null) {
       clearInterval(this.recordingTimer);
       this.recordingTimer = null;
     }
-    
+
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         reject(new Error("Audio recorder not initialized"));
         return;
       }
-      
+
       // If it's not in recording state, don't try to stop it
-      if (this.mediaRecorder.state !== 'recording') {
+      if (this.mediaRecorder.state !== "recording") {
         if (this.audioChunks.length > 0) {
-          const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+          const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
           resolve(audioBlob);
         } else {
           reject(new Error("No audio recorded"));
@@ -164,7 +176,7 @@ export class AudioRecorder {
       }
 
       this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
         resolve(audioBlob);
       };
 
@@ -183,26 +195,26 @@ export class AudioRecorder {
       console.log("Cannot start volume analysis - missing required components");
       return;
     }
-    
+
     // Clear any existing interval
     this.stopVolumeAnalysis();
-    
+
     console.log("Starting volume analysis with callback");
-    
+
     // Start a new interval to analyze volume - use requestAnimationFrame for smoother updates
     const updateVolume = () => {
       if (this.analyser && this.volumeDataArray && this.volumeCallback) {
         // Get current volume data
         this.analyser.getByteFrequencyData(this.volumeDataArray);
-        
+
         // Send to callback
         this.volumeCallback(this.volumeDataArray);
-        
+
         // Request next frame
         this.analyzeInterval = window.requestAnimationFrame(updateVolume);
       }
     };
-    
+
     // Initial call to start the animation loop
     this.analyzeInterval = window.requestAnimationFrame(updateVolume);
   }
@@ -220,10 +232,11 @@ export class AudioRecorder {
   // Get average volume level (0-100)
   public getAverageVolume(): number {
     if (!this.volumeDataArray) return 0;
-    
+
     const values = Array.from(this.volumeDataArray);
-    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-    
+    const average =
+      values.reduce((sum, value) => sum + value, 0) / values.length;
+
     // Scale to 0-100
     return Math.min(100, Math.max(0, average));
   }
@@ -236,7 +249,7 @@ export class AudioRecorder {
         const base64 = reader.result?.toString();
         if (base64) {
           // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
-          const base64Data = base64.split(',')[1];
+          const base64Data = base64.split(",")[1];
           resolve(base64Data);
         } else {
           reject(new Error("Failed to convert blob to base64"));
@@ -250,23 +263,24 @@ export class AudioRecorder {
   // Clean up resources
   public cleanup(): void {
     this.stopVolumeAnalysis();
-    
+
     // Clear any recording timers
     if (this.recordingTimer !== null) {
       clearInterval(this.recordingTimer);
       this.recordingTimer = null;
     }
-    
+
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      // biome-ignore lint/complexity/noForEach: <explanation>
+      this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
     }
-    
+
     if (this.audioContext) {
       this.audioContext.close().catch(console.error);
       this.audioContext = null;
     }
-    
+
     this.mediaStreamSource = null;
     this.analyser = null;
     this.mediaRecorder = null;
@@ -302,11 +316,14 @@ export class AudioPlayer {
     this.audio.currentTime = seconds;
   }
 
-  public skipForward(seconds: number = 15): void {
-    this.audio.currentTime = Math.min(this.audio.duration, this.audio.currentTime + seconds);
+  public skipForward(seconds = 15): void {
+    this.audio.currentTime = Math.min(
+      this.audio.duration,
+      this.audio.currentTime + seconds
+    );
   }
 
-  public skipBackward(seconds: number = 15): void {
+  public skipBackward(seconds = 15): void {
     this.audio.currentTime = Math.max(0, this.audio.currentTime - seconds);
   }
 
@@ -323,24 +340,24 @@ export class AudioPlayer {
   }
 
   public onTimeUpdate(callback: (currentTime: number) => void): void {
-    this.audio.addEventListener('timeupdate', () => {
+    this.audio.addEventListener("timeupdate", () => {
       callback(this.audio.currentTime);
     });
   }
 
   public onEnded(callback: () => void): void {
-    this.audio.addEventListener('ended', callback);
+    this.audio.addEventListener("ended", callback);
   }
 
   public onDurationChange(callback: (duration: number) => void): void {
-    this.audio.addEventListener('durationchange', () => {
+    this.audio.addEventListener("durationchange", () => {
       callback(this.audio.duration);
     });
   }
 
   public cleanup(): void {
     this.audio.pause();
-    this.audio.src = '';
+    this.audio.src = "";
     if (this.intervalId) {
       window.clearInterval(this.intervalId);
     }
@@ -349,10 +366,12 @@ export class AudioPlayer {
 
 // Format time in MM:SS format
 export function formatTime(seconds: number): string {
-  if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
-  
+  if (Number.isNaN(seconds) || !Number.isFinite(seconds)) return "00:00";
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
-  
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
 }

@@ -18,13 +18,17 @@ export default function Home() {
   const [step, setStep] = useState("Initializing...");
   const [refreshRecent, setRefreshRecent] = useState(false);
   const [learncastTitle, setLearncastTitle] = useState<string | undefined>();
-  const [learncastDescription, setLearncastDescription] = useState<string | undefined>();
-  const [learncastContent, setLearncastContent] = useState<string | undefined>();
+  const [learncastDescription, setLearncastDescription] = useState<
+    string | undefined
+  >();
+  const [learncastContent, setLearncastContent] = useState<
+    string | undefined
+  >();
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
     setAppState("processing");
-    
+
     // Start generating the podcast
     generatePodcast(newTranscript);
   };
@@ -37,7 +41,7 @@ export default function Home() {
       setLearncastTitle(undefined);
       setLearncastDescription(undefined);
       setLearncastContent(undefined);
-      
+
       const newPodcast = await generatePodcastFetch(
         topic,
         (newProgress, newStep) => {
@@ -50,12 +54,14 @@ export default function Home() {
           setLearncastContent(content);
         }
       );
-      
+
       setPodcast(newPodcast);
       setAppState("player");
-      setRefreshRecent(prev => !prev); // Toggle to refresh the recent podcasts list
+      setRefreshRecent((prev) => !prev); // Toggle to refresh the recent podcasts list
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to generate learncast"));
+      setError(
+        err instanceof Error ? err : new Error("Failed to generate learncast")
+      );
       setAppState("error");
     }
   };
@@ -83,10 +89,16 @@ export default function Home() {
     <div className="max-w-md mx-auto p-4 min-h-screen flex flex-col">
       <header className="py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <span className="material-icons text-primary text-3xl mr-2">menu_book</span>
+          <span className="material-icons text-primary text-3xl mr-2">
+            menu_book
+          </span>
           <h1 className="text-xl font-bold text-gray-800">LearncastAI</h1>
         </div>
-        <button className="text-gray-500 hover:text-gray-700" aria-label="Settings">
+        {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+        <button
+          className="text-gray-500 hover:text-gray-700"
+          aria-label="Settings"
+        >
           <span className="material-icons">settings</span>
         </button>
       </header>
@@ -99,27 +111,27 @@ export default function Home() {
               onError={handleError}
             />
           )}
-          
+
           {appState === "processing" && (
-            <Processing 
-              progress={progress} 
+            <Processing
+              progress={progress}
               step={step}
               title={learncastTitle}
               description={learncastDescription}
               content={learncastContent}
             />
           )}
-          
+
           {appState === "player" && podcast && (
             <PodcastPlayer podcast={podcast} onCreateNew={handleCreateNew} />
           )}
-          
+
           {appState === "error" && error && (
             <ErrorView error={error} onRetry={handleRetry} />
           )}
         </div>
 
-        <RecentPodcasts 
+        <RecentPodcasts
           onSelectPodcast={handleSelectPodcast}
           currentPodcastId={podcast?.id}
           refresh={refreshRecent}
@@ -127,7 +139,9 @@ export default function Home() {
       </main>
 
       <footer className="py-4 text-center text-xs text-gray-500">
-        <p>© {new Date().getFullYear()} LearncastAI • All content is AI-generated</p>
+        <p>
+          © {new Date().getFullYear()} LearncastAI • All content is AI-generated
+        </p>
       </footer>
     </div>
   );
