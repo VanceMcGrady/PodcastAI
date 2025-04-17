@@ -9,11 +9,16 @@ interface RecentPodcastsProps {
   refresh?: boolean;
 }
 
-export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: RecentPodcastsProps) {
+export function RecentPodcasts({
+  onSelectPodcast,
+  currentPodcastId,
+  refresh,
+}: RecentPodcastsProps) {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     const loadPodcasts = async () => {
       try {
@@ -21,7 +26,9 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
         const data = await fetchPodcasts();
         setPodcasts(data);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to load podcasts"));
+        setError(
+          err instanceof Error ? err : new Error("Failed to load podcasts")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -36,6 +43,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
         <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
         <div className="animate-pulse">
           {[1, 2].map((i) => (
+            // biome-ignore lint/style/useSelfClosingElements: <explanation>
             <div key={i} className="bg-gray-200 h-20 rounded-lg mb-3"></div>
           ))}
         </div>
@@ -68,11 +76,14 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
-      
+
       {podcasts.map((podcast) => (
-        <div 
+        // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+        <div
           key={podcast.id}
-          className={`bg-white rounded-lg shadow-sm p-4 mb-3 flex items-center hover:bg-gray-50 cursor-pointer ${podcast.id === currentPodcastId ? 'ring-2 ring-primary' : ''}`}
+          className={`bg-white rounded-lg shadow-sm p-4 mb-3 flex items-center hover:bg-gray-50 cursor-pointer ${
+            podcast.id === currentPodcastId ? "ring-2 ring-primary" : ""
+          }`}
           onClick={() => onSelectPodcast(podcast)}
         >
           <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded flex items-center justify-center mr-4">

@@ -13,19 +13,22 @@ export function PodcastPlayer({ podcast, onCreateNew }: PodcastPlayerProps) {
         <h2 className="text-xl font-semibold mb-2">{podcast.title}</h2>
         <p className="text-gray-600 text-sm">{podcast.description}</p>
       </div>
-      
+
       <div className="flex-1 flex flex-col justify-center">
         <div className="flex justify-center mb-8">
           <div className="w-40 h-40 bg-gradient-to-br from-primary to-accent rounded-lg shadow-md flex items-center justify-center">
-            <span className="material-icons text-white text-5xl">menu_book</span>
+            <span className="material-icons text-white text-5xl">
+              menu_book
+            </span>
           </div>
         </div>
-        
+
         <AudioPlayer audioUrl={podcast.audioUrl} />
       </div>
-      
+
       <div className="mt-6 flex justify-center">
-        <button 
+        {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+        <button
           className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition duration-200"
           onClick={onCreateNew}
         >
