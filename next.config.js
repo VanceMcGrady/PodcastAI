@@ -8,15 +8,15 @@ const nextConfig = {
   env: {
     // Any public environment variables
   },
-  distDir: '.next',
+  distDir: ".next",
   async rewrites() {
     return [
       {
-        source: '/audio/:path*',
-        destination: '/api/audio/:path*',
+        source: "/audio/:path*",
+        destination: "/api/audio/:path*",
       },
     ];
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
