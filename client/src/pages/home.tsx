@@ -17,6 +17,9 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState("Initializing...");
   const [refreshRecent, setRefreshRecent] = useState(false);
+  const [learncastTitle, setLearncastTitle] = useState<string | undefined>();
+  const [learncastDescription, setLearncastDescription] = useState<string | undefined>();
+  const [learncastContent, setLearncastContent] = useState<string | undefined>();
 
   const handleRecordingComplete = (newTranscript: string) => {
     setTranscript(newTranscript);
@@ -28,14 +31,23 @@ export default function Home() {
 
   const generatePodcast = async (topic: string) => {
     try {
+      // Reset states
       setProgress(0);
       setStep("Analyzing topic...");
+      setLearncastTitle(undefined);
+      setLearncastDescription(undefined);
+      setLearncastContent(undefined);
       
       const newPodcast = await generatePodcastFetch(
         topic,
         (newProgress, newStep) => {
           setProgress(newProgress);
           setStep(newStep);
+        },
+        (title, description, content) => {
+          setLearncastTitle(title);
+          setLearncastDescription(description);
+          setLearncastContent(content);
         }
       );
       
@@ -43,7 +55,7 @@ export default function Home() {
       setAppState("player");
       setRefreshRecent(prev => !prev); // Toggle to refresh the recent podcasts list
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to generate podcast"));
+      setError(err instanceof Error ? err : new Error("Failed to generate learncast"));
       setAppState("error");
     }
   };
@@ -89,7 +101,13 @@ export default function Home() {
           )}
           
           {appState === "processing" && (
-            <Processing progress={progress} step={step} />
+            <Processing 
+              progress={progress} 
+              step={step}
+              title={learncastTitle}
+              description={learncastDescription}
+              content={learncastContent}
+            />
           )}
           
           {appState === "player" && podcast && (
