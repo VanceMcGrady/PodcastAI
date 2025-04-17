@@ -1,3 +1,9 @@
 {
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/audio/[filename]/route": "app/api/audio/[filename]/route.js",
+  "/api/podcasts/[id]/route": "app/api/podcasts/[id]/route.js",
+  "/api/generate-podcast/route": "app/api/generate-podcast/route.js",
+  "/api/podcasts/route": "app/api/podcasts/route.js",
+  "/page": "app/page.js",
+  "/api/transcribe/route": "app/api/transcribe/route.js"
 }
