@@ -1,24 +1,11 @@
 import { useEffect, useState } from "react";
-import { StreamingPlayer } from "@/components/streaming-player";
 
 interface ProcessingProps {
   progress: number;
   step: string;
-  isStreamingAvailable?: boolean;
-  streamingStatus?: string;
-  streamingUrl?: string;
-  onAudioEnded?: () => void;
 }
 
-export function Processing({ 
-  progress, 
-  step, 
-  isStreamingAvailable = false,
-  streamingStatus,
-  streamingUrl,
-  onAudioEnded
-}: ProcessingProps) {
-  const [isPlaying, setIsPlaying] = useState(true); // Auto-play when available
+export function Processing({ progress, step }: ProcessingProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
   
   // Smoothly animate the progress
@@ -50,17 +37,11 @@ export function Processing({
         </div>
         
         <h3 className="text-lg font-medium text-center mb-2">
-          Creating your Learncast...
+          Creating your podcast...
         </h3>
         
-        <p className="text-gray-500 text-center mb-2">
-          This takes a few minutes. We're creating a high-quality 20-minute educational audiobook.
-        </p>
-        <p className="text-xs text-gray-400 text-center mb-1">
-          The process involves multiple steps: planning content structure, writing chapters,
-        </p>
-        <p className="text-xs text-gray-400 text-center mb-2">
-          generating professional narration, and assembling the final audiobook.
+        <p className="text-gray-500 text-center">
+          This might take a minute or two.
         </p>
         
         <div className="w-full max-w-xs mt-8">
@@ -79,37 +60,6 @@ export function Processing({
               style={{ width: `${animatedProgress}%` }}
             ></div>
           </div>
-          
-          {isStreamingAvailable && streamingStatus && streamingUrl ? (
-            <StreamingPlayer 
-              audioUrl={streamingUrl}
-              isPlaying={isPlaying}
-              onPlayPause={() => setIsPlaying(!isPlaying)}
-              onEnded={onAudioEnded}
-            />
-          ) : isStreamingAvailable && streamingStatus ? (
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 mr-3">
-                  <span className="material-icons text-blue-500 text-sm">headphones</span>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-blue-700 font-medium">
-                    {streamingStatus}
-                  </div>
-                  <div className="mt-1 text-xs text-blue-500">
-                    The full audiobook will be available when processing is complete.
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <div className="w-full max-w-[85%] bg-blue-100 h-1 rounded-full overflow-hidden">
-                  <div className="bg-blue-400 h-1 w-1/3 rounded-full animate-pulse"></div>
-                </div>
-                <span className="material-icons text-blue-500 text-lg ml-2">volume_up</span>
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>

@@ -33,7 +33,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (isLoading) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="animate-pulse">
           {[1, 2].map((i) => (
             <div key={i} className="bg-gray-200 h-20 rounded-lg mb-3"></div>
@@ -46,7 +46,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (error) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="bg-red-50 p-4 rounded-lg text-red-500 text-center">
           {error.message}
         </div>
@@ -57,9 +57,9 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
   if (podcasts.length === 0) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
+        <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
         <div className="bg-gray-50 p-4 rounded-lg text-gray-500 text-center">
-          You haven't created any learncasts yet.
+          You haven't created any audiobooks yet.
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ export function RecentPodcasts({ onSelectPodcast, currentPodcastId, refresh }: R
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-4">Your Learncast Library</h3>
+      <h3 className="text-lg font-semibold mb-4">Your Audiobook Library</h3>
       
       {podcasts.map((podcast) => (
         <div 

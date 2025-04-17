@@ -29,7 +29,7 @@ export function PodcastPlayer({ podcast, onCreateNew }: PodcastPlayerProps) {
           className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition duration-200"
           onClick={onCreateNew}
         >
-          Create new Learncast
+          Create new audiobook
         </button>
       </div>
     </div>

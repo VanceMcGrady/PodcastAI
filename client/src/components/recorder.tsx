@@ -168,17 +168,17 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex-1 flex flex-col">
       <h2 className="text-lg font-semibold text-center mb-6">
-        What topic for your Learncast?
+        What would you like to learn about?
       </h2>
       
       <div className="flex-1 flex flex-col items-center justify-center">
         {/* Always show the Voice Recording UI first */}
         {microphoneAvailable !== false && (
-          <div className="w-full mb-4 flex flex-col items-center">
+          <div className="w-full mb-8 flex flex-col items-center">
             <MicButton 
               isRecording={isRecording} 
               onClick={toggleRecording} 
-              className="mb-2"
+              className="mb-4"
             />
             
             <div className="flex flex-col items-center">
@@ -227,9 +227,9 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
             </div>
           )}
           
-          {/* More compact divider */}
+          {/* Optional divider */}
           {microphoneAvailable !== false && (
-            <div className="relative flex items-center my-3">
+            <div className="relative flex items-center my-6">
               <div className="flex-grow border-t border-gray-200"></div>
               <span className="flex-shrink mx-4 text-gray-400 text-sm">or type your topic</span>
               <div className="flex-grow border-t border-gray-200"></div>
@@ -243,7 +243,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 ref={textInputRef}
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Describe a topic for your Learncast..."
+                placeholder="Describe what you'd like your audiobook to be about..."
                 className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[80px] shadow-sm"
                 required
               />
@@ -256,7 +256,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                 type="submit"
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
               >
-                Create Learncast
+                Generate Audiobook
               </button>
             </div>
           </form>

@@ -28,11 +28,7 @@ export async function generatePodcast(
       } else if (data.status === 'completed') {
         podcast = data.podcast;
         eventSource.close();
-        if (podcast) {
-          resolve(podcast);
-        } else {
-          reject(new Error('No podcast data returned from server'));
-        }
+        resolve(podcast);
       } else if (data.status === 'error') {
         eventSource.close();
         reject(new Error(data.message || 'Failed to generate podcast'));
@@ -47,16 +43,10 @@ export async function generatePodcast(
   });
 }
 
-interface StreamingCallbacks {
-  onProgress: (progress: number, step: string) => void;
-  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean) => void;
-}
-
 // Alternative version that uses fetch instead of EventSource
 export async function generatePodcastFetch(
   topic: string,
-  onProgress: (progress: number, step: string) => void,
-  onChunkReady?: (chunkUrl: string, isFirstChunk: boolean, chunkIndex?: number) => void
+  onProgress: (progress: number, step: string) => void
 ): Promise<Podcast> {
   try {
     const response = await fetch('/api/generate-podcast', {
@@ -99,9 +89,6 @@ export async function generatePodcastFetch(
           
           if (data.status === 'generating') {
             onProgress(data.progress, data.step);
-          } else if (data.status === 'chunk_ready' && onChunkReady) {
-            // A new audio chunk is ready for progressive streaming
-            onChunkReady(data.audioUrl, data.isFirstChunk, data.chunkIndex);
           } else if (data.status === 'completed') {
             return data.podcast;
           } else if (data.status === 'error') {
@@ -124,8 +111,6 @@ export async function generatePodcastFetch(
               
               if (data.status === 'generating') {
                 onProgress(data.progress, data.step);
-              } else if (data.status === 'chunk_ready' && onChunkReady) {
-                onChunkReady(data.audioUrl, data.isFirstChunk, data.chunkIndex);
               } else if (data.status === 'completed') {
                 return data.podcast;
               } else if (data.status === 'error') {
