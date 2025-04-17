@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { transcribeAudio, generatePodcastContent, textToSpeech } from "./openai";
+import { transcribeAudio, generateLearncastContent, textToSpeech } from "./openai";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -18,34 +18,34 @@ if (!fs.existsSync(audioDir)) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API endpoint to get all podcasts
+  // API endpoint to get all learncasts
   app.get("/api/podcasts", async (req: Request, res: Response) => {
     try {
       const podcasts = await storage.getAllPodcasts();
       res.status(200).json(podcasts);
     } catch (error) {
-      console.error("Error fetching podcasts:", error);
-      res.status(500).json({ message: "Failed to fetch podcasts" });
+      console.error("Error fetching learncasts:", error);
+      res.status(500).json({ message: "Failed to fetch learncasts" });
     }
   });
 
-  // API endpoint to get a specific podcast
+  // API endpoint to get a specific learncast
   app.get("/api/podcasts/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid podcast ID" });
+        return res.status(400).json({ message: "Invalid learncast ID" });
       }
 
       const podcast = await storage.getPodcast(id);
       if (!podcast) {
-        return res.status(404).json({ message: "Podcast not found" });
+        return res.status(404).json({ message: "Learncast not found" });
       }
 
       res.status(200).json(podcast);
     } catch (error) {
-      console.error("Error fetching podcast:", error);
-      res.status(500).json({ message: "Failed to fetch podcast" });
+      console.error("Error fetching learncast:", error);
+      res.status(500).json({ message: "Failed to fetch learncast" });
     }
   });
 
@@ -66,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint for generating podcast
+  // API endpoint for generating learncast
   app.post("/api/generate-podcast", async (req: Request, res: Response) => {
     try {
       const { topic } = req.body;
@@ -100,15 +100,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Step 1: Generate content
         sendProgress(25, "Generating content...");
-        const content = await generatePodcastContent(topic);
+        const content = await generateLearncastContent(topic);
   
         // Step 2: Convert to speech
         sendProgress(50, "Converting to speech...");
         const audioBuffer = await textToSpeech(content.content);
   
         // Step 3: Save audio file
-        sendProgress(75, "Finalizing podcast...");
-        const fileName = `podcast-${Date.now()}.mp3`;
+        sendProgress(75, "Finalizing learncast...");
+        const fileName = `learncast-${Date.now()}.mp3`;
         const filePath = path.join(audioDir, fileName);
         fs.writeFileSync(filePath, audioBuffer);
   
@@ -137,22 +137,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.write(completion);
         res.end();
       } catch (innerError) {
-        console.error("Inner error generating podcast:", innerError);
+        console.error("Inner error generating learncast:", innerError);
         const errorMessage = innerError instanceof Error ? innerError.message : "Unknown error";
         const errorResponse = JSON.stringify({ 
           status: "error", 
-          message: `Failed to generate podcast: ${errorMessage}` 
+          message: `Failed to generate learncast: ${errorMessage}` 
         }) + "\n";
         res.write(errorResponse);
         res.end();
       }
     } catch (error) {
-      console.error("Outer error generating podcast:", error);
+      console.error("Outer error generating learncast:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       try {
         res.write(JSON.stringify({ 
           status: "error", 
-          message: `Failed to generate podcast: ${errorMessage}` 
+          message: `Failed to generate learncast: ${errorMessage}` 
         }) + "\n");
         res.end();
       } catch (writeError) {

@@ -29,7 +29,7 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
 }
 
 // Generate learncast content based on topic
-export async function generatePodcastContent(topic: string): Promise<{
+export async function generateLearncastContent(topic: string): Promise<{
   title: string;
   description: string;
   content: string;
@@ -69,9 +69,9 @@ export async function generatePodcastContent(topic: string): Promise<{
       content: result.content || `Failed to generate learncast content for ${topic}`
     };
   } catch (error: unknown) {
-    console.error("Error generating podcast content:", error);
+    console.error("Error generating learncast content:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Failed to generate podcast content: ${errorMessage}`);
+    throw new Error(`Failed to generate learncast content: ${errorMessage}`);
   }
 }
 
@@ -95,7 +95,7 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     // For long text, create a demo sample with introduction and first section
     console.log(`Text too long (${text.length} chars). Generating audio for introduction section.`);
     
-    // Strategy: Get the introduction section which typically contains the podcast format and overview
+    // Strategy: Get the introduction section which typically contains the learncast overview
     // First, split by major sections (usually indicated by multiple newlines or section markers)
     const sections = text.split(/\n\s*---\s*\n|\n\*\*Section/i);
     
