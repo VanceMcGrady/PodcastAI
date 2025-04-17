@@ -3,12 +3,12 @@
 /**
  * Get an environment variable with fallback
  */
-export function getEnv(key: string, fallback: string = ''): string {
+export function getEnv(key: string, fallback): string {
   // For client components
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     return (process.env[`NEXT_PUBLIC_${key}`] as string) || fallback;
   }
-  
+
   // For server components
   return (process.env[key] as string) || fallback;
 }
@@ -17,5 +17,10 @@ export function getEnv(key: string, fallback: string = ''): string {
  * Get the base URL for API requests
  */
 export function getApiBaseUrl(): string {
-  return getEnv('API_URL', typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  return getEnv(
+    "API_URL",
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost:3000"
+  );
 }
