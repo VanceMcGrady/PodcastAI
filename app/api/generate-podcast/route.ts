@@ -31,9 +31,7 @@ export async function POST(request: NextRequest) {
       description: learncastContent.description,
       content: learncastContent.content,
       audioUrl,
-      topic,
-      transcript: transcript || "",
-      createdAt: new Date(),
+      duration: 0,
     });
 
     return NextResponse.json(podcast);

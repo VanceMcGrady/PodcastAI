@@ -8,14 +8,6 @@ const nextConfig = {
     // Any public environment variables
   },
   distDir: ".next",
-  async rewrites() {
-    return [
-      {
-        source: "/audio/:path*",
-        destination: "/api/audio/:path*",
-      },
-    ];
-  },
 };
 
 export default nextConfig;
