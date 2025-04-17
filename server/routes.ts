@@ -101,6 +101,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Step 1: Generate content
         sendProgress(25, "Generating content...");
         const content = await generateLearncastContent(topic);
+        
+        // Send the generated text content to the client
+        const textUpdate = JSON.stringify({
+          status: "text_content",
+          title: content.title,
+          description: content.description,
+          content: content.content
+        }) + "\n";
+        res.write(textUpdate);
   
         // Step 2: Convert to speech
         sendProgress(50, "Converting to speech...");

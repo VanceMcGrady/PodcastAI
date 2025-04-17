@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 interface ProcessingProps {
   progress: number;
   step: string;
+  title?: string;
+  description?: string;
+  content?: string;
 }
 
-export function Processing({ progress, step }: ProcessingProps) {
+export function Processing({ progress, step, title, description, content }: ProcessingProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
   
   // Smoothly animate the progress
@@ -37,7 +40,7 @@ export function Processing({ progress, step }: ProcessingProps) {
         </div>
         
         <h3 className="text-lg font-medium text-center mb-2">
-          Creating your podcast...
+          Creating your learncast...
         </h3>
         
         <p className="text-gray-500 text-center">

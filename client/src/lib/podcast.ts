@@ -11,7 +11,8 @@ export async function transcribeAudio(audioBase64: string): Promise<string> {
 // Function to generate a podcast
 export async function generatePodcast(
   topic: string, 
-  onProgress: (progress: number, step: string) => void
+  onProgress: (progress: number, step: string) => void,
+  onTextContent?: (title: string, description: string, content: string) => void
 ): Promise<Podcast> {
   return new Promise((resolve, reject) => {
     let podcast: Podcast | null = null;
@@ -25,20 +26,26 @@ export async function generatePodcast(
       
       if (data.status === 'generating') {
         onProgress(data.progress, data.step);
+      } else if (data.status === 'text_content' && onTextContent) {
+        onTextContent(data.title, data.description, data.content);
       } else if (data.status === 'completed') {
         podcast = data.podcast;
         eventSource.close();
-        resolve(podcast);
+        if (podcast) {
+          resolve(podcast);
+        } else {
+          reject(new Error('Failed to generate learncast: No content returned'));
+        }
       } else if (data.status === 'error') {
         eventSource.close();
-        reject(new Error(data.message || 'Failed to generate podcast'));
+        reject(new Error(data.message || 'Failed to generate learncast'));
       }
     };
     
     // Handle errors
     eventSource.onerror = () => {
       eventSource.close();
-      reject(new Error('Connection error while generating podcast'));
+      reject(new Error('Connection error while generating learncast'));
     };
   });
 }
@@ -46,7 +53,8 @@ export async function generatePodcast(
 // Alternative version that uses fetch instead of EventSource
 export async function generatePodcastFetch(
   topic: string,
-  onProgress: (progress: number, step: string) => void
+  onProgress: (progress: number, step: string) => void,
+  onTextContent?: (title: string, description: string, content: string) => void
 ): Promise<Podcast> {
   try {
     const response = await fetch('/api/generate-podcast', {
@@ -89,12 +97,14 @@ export async function generatePodcastFetch(
           
           if (data.status === 'generating') {
             onProgress(data.progress, data.step);
+          } else if (data.status === 'text_content' && onTextContent) {
+            onTextContent(data.title, data.description, data.content);
           } else if (data.status === 'completed') {
             return data.podcast;
           } else if (data.status === 'error') {
             // Debug raw error message
             console.error('Server error:', data.message);
-            throw new Error(data.message || 'Failed to generate podcast');
+            throw new Error(data.message || 'Failed to generate learncast');
           }
         } catch (e) {
           // More detailed logging for debugging
@@ -111,10 +121,12 @@ export async function generatePodcastFetch(
               
               if (data.status === 'generating') {
                 onProgress(data.progress, data.step);
+              } else if (data.status === 'text_content' && onTextContent) {
+                onTextContent(data.title, data.description, data.content);
               } else if (data.status === 'completed') {
                 return data.podcast;
               } else if (data.status === 'error') {
-                throw new Error(data.message || 'Failed to generate podcast');
+                throw new Error(data.message || 'Failed to generate learncast');
               }
             }
           } catch (innerError) {
@@ -131,16 +143,16 @@ export async function generatePodcastFetch(
         if (data.status === 'completed') {
           return data.podcast;
         } else if (data.status === 'error') {
-          throw new Error(data.message || 'Failed to generate podcast');
+          throw new Error(data.message || 'Failed to generate learncast');
         }
       } catch (e) {
         console.warn('Error parsing final buffer:', buffer, e);
       }
     }
     
-    throw new Error('Failed to generate podcast: incomplete response');
+    throw new Error('Failed to generate learncast: incomplete response');
   } catch (error) {
-    console.error('Error generating podcast:', error);
+    console.error('Error generating learncast:', error);
     throw error;
   }
 }
