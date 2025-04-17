@@ -1,66 +1,102 @@
 # Deploying LearncastAI to Vercel
 
-This document provides instructions for deploying the LearncastAI application to Vercel.
+This document provides step-by-step instructions for deploying the LearncastAI application to Vercel.
 
 ## Prerequisites
 
-1. A GitHub repository containing your LearncastAI codebase
-2. A Vercel account (you can sign up at [vercel.com](https://vercel.com))
-3. An OpenAI API key
+- A GitHub account
+- A Vercel account (you can sign up at https://vercel.com using your GitHub account)
+- An OpenAI API key
 
-## Preparation Steps
+## Deployment Steps
 
-1. Make sure your code is pushed to a GitHub repository
-2. Switch to Next.js mode by running:
-   ```bash
-   chmod +x switch-to-nextjs.sh
-   ./switch-to-nextjs.sh
+1. **Set up GitHub Repository**
+   - Push your code to a GitHub repository
+   - Make sure all your changes are committed
+
+2. **Add Important Configuration Files**
+   - Make sure you have these files in your repository:
+     - `next.config.js`
+     - `app/` directory with your Next.js app code
+     - `vercel.json` with minimal configuration
+
+3. **Configuration for Vercel**
+
+   Before deploying, create a file called `.npmrc` in your repository:
    ```
-3. Commit the changes to your repository
+   echo "legacy-peer-deps=true" > .npmrc
+   ```
 
-## Deployment Process
+   And create a file called `.nvmrc` for Node.js version:
+   ```
+   echo "18.18.0" > .nvmrc
+   ```
 
-1. **Connect your GitHub repository to Vercel**:
-   - Log in to your Vercel account
-   - Click "Add New" > "Project"
-   - Select your GitHub repository
-   - Click "Import"
+4. **Update package.json**
 
-2. **Configure project settings**:
-   - In the "Configure Project" screen, expand the "Environment Variables" section
-   - Add the following environment variable:
-     - Name: `OPENAI_API_KEY`
-     - Value: Your OpenAI API key
-   - The framework preset should automatically be set to Next.js
+   Create a new temporary `package.json` for deployment with these scripts:
+   ```json
+   {
+     "name": "learncast-ai",
+     "version": "1.0.0",
+     "private": true,
+     "scripts": {
+       "dev": "next dev",
+       "build": "next build",
+       "start": "next start",
+       "lint": "next lint"
+     }
+   }
+   ```
+   
+   *Note: You'll only use this file for the Vercel deployment, not in your local environment.*
 
-3. **Deploy your project**:
+5. **Deploy to Vercel**
+   - Go to https://vercel.com/new
+   - Import your GitHub repository
+   - Configure the project:
+     - Framework Preset: Next.js
+     - Root Directory: ./
+     - Build Command: next build
+     - Output Directory: .next
+   - Add environment variables:
+     - OPENAI_API_KEY: [Your OpenAI API Key]
    - Click "Deploy"
-   - Vercel will build and deploy your application
 
-4. **Access your deployed application**:
-   - Once the deployment is complete, Vercel will provide you with a URL for your application
-   - Click on the URL to access your deployed LearncastAI application
+6. **Troubleshooting**
+   
+   If you encounter the error about missing `routes-manifest.json`:
+   
+   - Make sure your `vercel.json` file only contains:
+     ```json
+     {
+       "buildCommand": "next build",
+       "outputDirectory": ".next"
+     }
+     ```
+   
+   - In the Vercel deployment settings, override the build command to:
+     ```
+     npm install --legacy-peer-deps && next build
+     ```
+   
+   - If issues persist, try creating a simple `next.config.mjs` file:
+     ```js
+     /** @type {import('next').NextConfig} */
+     const nextConfig = {
+       distDir: '.next',
+     };
+     
+     export default nextConfig;
+     ```
 
-## Post-Deployment
+## After Deployment
 
-- You can configure a custom domain for your application in the Vercel dashboard
-- Verify that all features are working properly in the deployed application
+Once deployed, your application will be available at:
+- `https://your-project-name.vercel.app`
 
-## Troubleshooting
+You can set up a custom domain in the Vercel dashboard if needed.
 
-If you encounter issues with your deployment:
+## Updating Your Deployment
 
-1. Check the build logs in the Vercel dashboard for any errors
-2. Verify that your environment variables are correctly set
-3. Ensure that your OpenAI API key is valid and has sufficient credits
-
-## Switching Back to Express Mode for Local Development
-
-If you need to switch back to Express mode for local development:
-
-```bash
-chmod +x switch-to-express.sh
-./switch-to-express.sh
-```
-
-This will restore the original configuration files.
+Any new pushes to the main branch of your GitHub repository will automatically trigger a new deployment on Vercel.
