@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "dist/public",
-  "framework": "vite",
-  "functions": {
-    "api/**/*": {
-      "memory": 1024
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -19,11 +16,8 @@
       "dest": "/api/audio/$1"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ],
   "env": {

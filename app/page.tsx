@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the Home component to avoid SSR issues with browser-only APIs
