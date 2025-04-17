@@ -1,0 +1,8 @@
+{
+  "app/page.tsx -> ../client/src/pages/home": {
+    "id": "app/page.tsx -> ../client/src/pages/home",
+    "files": [
+      "static/chunks/_app-pages-browser_client_src_pages_home_tsx.js"
+    ]
+  }
+}
