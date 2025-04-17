@@ -24,3 +24,8 @@
     "OPENAI_API_KEY": "openai_api_key"
   }
 }
+
+  "buildCommand": "next build",
+  "outputDirectory": ".next"
+}
+
