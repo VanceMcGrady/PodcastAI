@@ -1,12 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getAudioFile } from "../../../lib/audioStorage";
+type RouteHandlerContext<T> = {
+  params: T;
+};
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  context: RouteHandlerContext<{ filename: string }>
 ) {
   try {
-    const filename = params.filename;
+    const filename = context.params.filename;
 
     // Get the audio buffer using our helper function
     const audioBuffer = await getAudioFile(filename);
