@@ -80,14 +80,22 @@ This document provides step-by-step instructions for deploying the LearncastAI a
      npm install --legacy-peer-deps && next build
      ```
    
-   - If issues persist, try creating a simple `next.config.mjs` file:
+   - Make sure your next.config.js is using the CommonJS format:
      ```js
      /** @type {import('next').NextConfig} */
      const nextConfig = {
        distDir: '.next',
+       async rewrites() {
+         return [
+           {
+             source: '/audio/:path*',
+             destination: '/api/audio/:path*',
+           },
+         ];
+       },
      };
      
-     export default nextConfig;
+     module.exports = nextConfig;
      ```
 
 ## After Deployment
