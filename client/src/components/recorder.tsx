@@ -264,7 +264,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                   ref={textInputRef}
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Describe what you'd like your audiobook to be about..."
+                  placeholder="Describe what you'd like your learncast to be about..."
                   className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary min-h-[120px] shadow-sm"
                   required
                 />
@@ -277,7 +277,7 @@ export function Recorder({ onRecordingComplete, onError }: RecorderProps) {
                   type="submit"
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition duration-200"
                 >
-                  Generate Audiobook
+                  Generate Learncast
                 </button>
               </div>
             </form>

@@ -72,7 +72,7 @@ export default function Home() {
       <header className="py-4 flex items-center justify-between">
         <div className="flex items-center">
           <span className="material-icons text-primary text-3xl mr-2">menu_book</span>
-          <h1 className="text-xl font-bold text-gray-800">AudiobookAI</h1>
+          <h1 className="text-xl font-bold text-gray-800">LearncastAI</h1>
         </div>
         <button className="text-gray-500 hover:text-gray-700" aria-label="Settings">
           <span className="material-icons">settings</span>
@@ -109,7 +109,7 @@ export default function Home() {
       </main>
 
       <footer className="py-4 text-center text-xs text-gray-500">
-        <p>© {new Date().getFullYear()} AudiobookAI • All content is AI-generated</p>
+        <p>© {new Date().getFullYear()} LearncastAI • All content is AI-generated</p>
       </footer>
     </div>
   );

@@ -28,7 +28,7 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   }
 }
 
-// Generate audiobook content based on topic
+// Generate learncast content based on topic
 export async function generatePodcastContent(topic: string): Promise<{
   title: string;
   description: string;
@@ -41,20 +41,20 @@ export async function generatePodcastContent(topic: string): Promise<{
         {
           role: "system",
           content: 
-            "You are an expert audiobook creator known for high-quality non-fiction audiobooks. " +
-            "Focus on creating content that's eloquent, immersive, and educational with a warm narrative voice. " +
-            "Write in a literary style suitable for an audiobook - clear, descriptive, and engaging with a professional narrator's voice. " +
+            "You are an expert creator of Learncasts - high-quality educational audio content that combines the knowledge depth of a lecture with the engaging narrative style of premium educational content. " +
+            "Focus on creating content that's eloquent, immersive, and educational with a warm, authoritative teaching voice. " +
+            "Write in a literary style suitable for educational audio - clear, descriptive, and engaging with a professional narrator's voice. " +
             "Avoid podcast-specific elements like host introductions, interjections, or references to 'listeners' or 'episodes'. " +
             "The narrative should flow smoothly with proper transitions between sections. " +
-            "The length should be appropriate for about a 30-minute audiobook chapter (approximately 4500-5000 words)."
+            "The length should be appropriate for about a 30-minute learncast (approximately 4500-5000 words)."
         },
         {
           role: "user",
-          content: `Create an audiobook chapter about "${topic}". Provide a JSON response with the following structure: 
+          content: `Create a Learncast about "${topic}". Provide a JSON response with the following structure: 
           {
-            "title": "An elegant title for the audiobook",
-            "description": "A brief 1-2 sentence description of what the audiobook chapter covers",
-            "content": "The full audiobook chapter content"
+            "title": "An informative and engaging title for the Learncast",
+            "description": "A brief 1-2 sentence description of what this Learncast covers",
+            "content": "The full Learncast content"
           }`
         }
       ],
@@ -64,9 +64,9 @@ export async function generatePodcastContent(topic: string): Promise<{
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
     return {
-      title: result.title || `Podcast about ${topic}`,
-      description: result.description || `A podcast exploring ${topic}`,
-      content: result.content || `Failed to generate content for ${topic}`
+      title: result.title || `Learncast about ${topic}`,
+      description: result.description || `A learncast exploring ${topic}`,
+      content: result.content || `Failed to generate learncast content for ${topic}`
     };
   } catch (error: unknown) {
     console.error("Error generating podcast content:", error);
@@ -85,7 +85,7 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     if (text.length <= MAX_CHUNK_SIZE) {
       const mp3 = await openai.audio.speech.create({
         model: "tts-1",
-        voice: "nova", // Nova voice has a warm, professional narrative quality that's perfect for audiobooks
+        voice: "nova", // Nova voice has a warm, professional narrative quality that's perfect for learncasts
         input: text,
       });
       
@@ -117,7 +117,7 @@ export async function textToSpeech(text: string): Promise<Buffer> {
     }
     
     // Add a note about the shortened content
-    sampleText += "\n\nThis is a shortened sample of the audiobook. In a production version, the full content would be available.";
+    sampleText += "\n\nThis is a shortened sample of the learncast. In a production version, the full content would be available.";
     
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
