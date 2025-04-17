@@ -116,8 +116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const wordCount = content.content.split(' ').length;
         const approximateDuration = Math.round(wordCount * 0.5);
   
-        // Step 4: Create podcast entry
-        const podcastData = {
+        // Step 4: Create learncast entry
+        const learncastData = {
           title: content.title,
           description: content.description,
           content: content.content,
@@ -125,14 +125,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           duration: approximateDuration
         };
   
-        const validatedData = insertPodcastSchema.parse(podcastData);
-        const podcast = await storage.createPodcast(validatedData);
+        const validatedData = insertPodcastSchema.parse(learncastData);
+        const learncast = await storage.createPodcast(validatedData);
   
-        // Step 5: Return final podcast
+        // Step 5: Return final learncast
         const completion = JSON.stringify({ 
           status: "completed", 
           progress: 100, 
-          podcast 
+          podcast: learncast 
         }) + "\n";
         res.write(completion);
         res.end();
