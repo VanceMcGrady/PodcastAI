@@ -3,7 +3,7 @@ import { getAudioFile } from "../../../lib/audioStorage";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename } }
+  { params }: { params: { filename: string } }
 ) {
   try {
     const filename = params.filename;
