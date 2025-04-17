@@ -1,5 +1,1 @@
-{
-  "/api/transcribe/route": "app/api/transcribe/route.js",
-  "/api/podcasts/route": "app/api/podcasts/route.js",
-  "/page": "app/page.js"
-}
+{}
